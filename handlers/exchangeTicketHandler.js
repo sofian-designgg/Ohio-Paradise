@@ -18,7 +18,7 @@ const isFiat = (s) => FIAT_SYMBOLS.includes(s);
 const getFiatCurrency = (s) => USD_EQUIV.includes(s) ? 'usd' : 'eur';
 
 const getCryptoPrices = async (ids, vs = 'eur') => {
-  const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vs}`);
+  const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vs}`, { timeout: 8000 });
   return r.data;
 };
 
@@ -61,6 +61,7 @@ const getNextTicketNumber = async (guildId) => {
 };
 
 const handleExchangePanelOpen = async (interaction) => {
+  try {
   await interaction.deferReply({ ephemeral: true });
   const config = await GuildConfig.findOne({ guildId: interaction.guildId });
   if (!config) return interaction.editReply({ content: '❌ Configuration introuvable.' });
@@ -101,9 +102,16 @@ const handleExchangePanelOpen = async (interaction) => {
     content: '**Étape 1/3** — Sélectionne la crypto que tu envoies :',
     components: [row],
   });
+  } catch (err) {
+    console.error('[ExchangeTicket] handleExchangePanelOpen error:', err);
+    const m = { content: '❌ Erreur lors de l\'ouverture du panneau.', ephemeral: true };
+    if (interaction.deferred || interaction.replied) await interaction.editReply(m).catch(() => {});
+    else await interaction.reply(m).catch(() => {});
+  }
 };
 
 const handleSelectFrom = async (interaction) => {
+  try {
   const from = interaction.values[0];
   const config = await GuildConfig.findOne({ guildId: interaction.guildId });
   const activePairs = config?.exchangeConfig?.activePairs || [];
@@ -131,6 +139,10 @@ const handleSelectFrom = async (interaction) => {
     content: `**Étape 2/3** — Tu envoies **${from}**. Sélectionne ce que tu veux recevoir :`,
     components: [new ActionRowBuilder().addComponents(selectTo)],
   });
+  } catch (err) {
+    console.error('[ExchangeTicket] handleSelectFrom error:', err);
+    await interaction.update({ content: '❌ Erreur. Réessaie.', components: [] }).catch(() => {});
+  }
 };
 
 const handleSelectTo = async (interaction) => {
@@ -161,6 +173,7 @@ const handleSelectTo = async (interaction) => {
 };
 
 const handleAmountSubmit = async (interaction, pair) => {
+  try {
   await interaction.deferReply({ ephemeral: true });
   const [from, to] = pair.split('_');
   const rawAmount = interaction.fields.getTextInputValue('exc_amount').replace(',', '.');
@@ -265,6 +278,15 @@ const handleAmountSubmit = async (interaction, pair) => {
 
   const openedMsg = fmt(msgs.ticketOpenedMsg || '✅ Ton ticket exchange a été créé : {channel}', { channel: `<#${channel.id}>` });
   await interaction.editReply({ content: openedMsg, components: [] });
+  } catch (err) {
+    console.error('[ExchangeTicket] handleAmountSubmit error:', err);
+    const errMsg = { content: '❌ Une erreur est survenue lors de la création du ticket. Réessaie.', components: [] };
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply(errMsg).catch(() => {});
+    } else {
+      await interaction.reply({ ...errMsg, ephemeral: true }).catch(() => {});
+    }
+  }
 };
 
 const handleExchangeDone = async (interaction, ticketId) => {
