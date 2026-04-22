@@ -279,8 +279,9 @@ const handleAmountSubmit = async (interaction, pair) => {
   const openedMsg = fmt(msgs.ticketOpenedMsg || '✅ Ton ticket exchange a été créé : {channel}', { channel: `<#${channel.id}>` });
   await interaction.editReply({ content: openedMsg, components: [] });
   } catch (err) {
-    console.error('[ExchangeTicket] handleAmountSubmit error:', err);
-    const errMsg = { content: '❌ Une erreur est survenue lors de la création du ticket. Réessaie.', components: [] };
+    console.error('[ExchangeTicket] handleAmountSubmit error:', err?.message || err);
+    console.error('[ExchangeTicket] stack:', err?.stack);
+    const errMsg = { content: `❌ Erreur: \`${err?.message || err}\``, components: [] };
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply(errMsg).catch(() => {});
     } else {
