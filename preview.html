@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ohio Paradise — Dashboard</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --accent2: #5865F2;
+    --text: #e0e0e0;
+    --muted: #8b8b9e;
+    --success: #2ecc71;
+    --warning: #f1c40f;
+    --danger: #ed4245;
+    --border: rgba(255,255,255,0.08);
+    --discord-dark: #2b2d31;
+    --discord-darker: #1e1f22;
+    --discord-input: #383a40;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 240px; background: var(--discord-darker); flex-shrink: 0; display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-logo { padding: 0 16px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h2 { font-size: 18px; color: var(--accent); font-weight: 800; letter-spacing: 1px; }
+  .sidebar-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .nav { flex: 1; padding: 12px 0; }
+  .nav-section { padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; margin: 2px 8px; transition: background 0.2s; font-size: 14px; color: var(--text); text-decoration: none; }
+  .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--accent2); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .main { flex: 1; padding: 32px; overflow-y: auto; max-width: 1200px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  /* CARDS */
+  .card { background: var(--discord-dark); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title span { font-size: 18px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+  input, textarea, select { width: 100%; background: var(--discord-input); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent2); }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--discord-input); }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--accent2); color: #fff; }
+  .btn-primary:hover { background: #4752c4; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #27ae60; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-secondary { background: var(--discord-input); color: var(--text); }
+  .btn-secondary:hover { background: #4a4d57; }
+  .btn-warning { background: var(--warning); color: #1a1a2e; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-blue { background: rgba(88,101,242,0.3); color: var(--accent2); }
+  .badge-green { background: rgba(46,204,113,0.3); color: var(--success); }
+  .badge-red { background: rgba(237,66,69,0.3); color: var(--danger); }
+  .badge-yellow { background: rgba(241,196,15,0.3); color: var(--warning); }
+
+  /* DISCORD PREVIEW */
+  .discord-mock { background: var(--discord-darker); border-radius: 12px; padding: 16px; font-family: 'Segoe UI', sans-serif; }
+  .discord-msg { display: flex; gap: 12px; margin-bottom: 12px; }
+  .discord-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .discord-content { flex: 1; }
+  .discord-author { font-size: 14px; font-weight: 700; color: var(--accent2); margin-bottom: 2px; }
+  .discord-author .bot-tag { background: var(--accent2); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 4px; font-weight: 700; }
+  .discord-text { font-size: 14px; color: #dbdee1; line-height: 1.4; }
+  .embed { border-left: 4px solid; border-radius: 0 6px 6px 0; background: #2b2d31; padding: 12px 16px; margin-top: 4px; max-width: 520px; }
+  .embed-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .embed-desc { font-size: 14px; color: #dbdee1; line-height: 1.4; margin-bottom: 10px; white-space: pre-line; }
+  .embed-field { margin-bottom: 8px; }
+  .embed-field-name { font-size: 13px; font-weight: 700; color: #fff; }
+  .embed-field-value { font-size: 13px; color: #dbdee1; }
+  .embed-fields { display: grid; gap: 8px; }
+  .embed-fields.inline { grid-template-columns: repeat(3, 1fr); }
+  .embed-footer { font-size: 12px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .embed-image img { max-width: 100%; border-radius: 4px; margin-top: 8px; }
+  .discord-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .d-btn { padding: 6px 16px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+  .d-btn.primary { background: var(--accent2); color: #fff; }
+  .d-btn.secondary { background: #4e5058; color: #fff; }
+  .d-btn.success { background: #2d7d46; color: #fff; }
+  .d-btn.danger { background: #c62828; color: #fff; }
+
+  /* TICKET PANEL EDITOR */
+  .btn-list { display: flex; flex-direction: column; gap: 8px; }
+  .btn-item { background: var(--discord-input); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+  .btn-item-info { flex: 1; }
+  .btn-item-label { font-weight: 600; font-size: 14px; }
+  .btn-item-cat { font-size: 12px; color: var(--muted); }
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* EXCHANGE */
+  .rate-card { background: var(--discord-input); border-radius: 8px; padding: 16px; text-align: center; }
+  .rate-pair { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .rate-value { font-size: 22px; font-weight: 800; color: var(--success); }
+  .rate-change { font-size: 12px; color: var(--success); margin-top: 2px; }
+  .rate-change.neg { color: var(--danger); }
+
+  /* PAYMENT */
+  .payment-card { background: var(--discord-input); border-radius: 8px; padding: 16px; position: relative; }
+  .payment-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .payment-type-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(88,101,242,0.3); color: var(--accent2); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--discord-darker); padding: 4px; border-radius: 8px; width: fit-content; }
+  .tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); transition: all 0.2s; }
+  .tab.active { background: var(--accent2); color: #fff; }
+
+  /* STATS */
+  .stat-card { background: var(--discord-input); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-value { font-size: 32px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stat-icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* TOGGLE */
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #4a4d57; border-radius: 24px; transition: 0.3s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+  .toggle input:checked + .toggle-slider { background: var(--success); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* COMMAND REF */
+  .cmd-ref { background: var(--discord-darker); border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 13px; color: #dbdee1; margin-bottom: 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .cmd-name { color: #7289da; font-weight: 700; }
+  .cmd-desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .copy-btn { background: rgba(255,255,255,0.1); border: none; padding: 4px 8px; border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 11px; white-space: nowrap; }
+  .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .copy-btn[data-copy] { cursor: pointer; }
+
+  .alert { border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+  .alert-info { background: rgba(88,101,242,0.15); border: 1px solid rgba(88,101,242,0.3); color: #a5b4fc; }
+  .alert-success { background: rgba(46,204,113,0.15); border: 1px solid rgba(46,204,113,0.3); color: #86efac; }
+
+  .separator { height: 1px; background: var(--border); margin: 20px 0; }
+  .flex-row { display: flex; align-items: center; gap: 12px; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .input-row .form-group { flex: 1; margin-bottom: 0; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--discord-dark); border-radius: 12px; padding: 28px; width: 500px; max-width: 95vw; border: 1px solid var(--border); }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>⚡ OHIO PARADISE</h2>
+      <p>Dashboard de configuration</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Général</div>
+      <a class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a class="nav-item" onclick="showPage('config')"><span class="nav-icon">⚙️</span>Configuration</a>
+      <div class="nav-section">Fonctionnalités</div>
+      <a class="nav-item" onclick="showPage('tickets')"><span class="nav-icon">🎫</span>Tickets</a>
+      <a class="nav-item" onclick="showPage('exchange')"><span class="nav-icon">💱</span>Exchange</a>
+      <a class="nav-item" onclick="showPage('payment')"><span class="nav-icon">💳</span>Paiements</a>
+      <a class="nav-item" onclick="showPage('embed')"><span class="nav-icon">🎨</span>Embed Builder</a>
+      <div class="nav-section">Communauté</div>
+      <a class="nav-item" onclick="showPage('orders')"><span class="nav-icon">📦</span>Commandes</a>
+      <a class="nav-item" onclick="showPage('reviews')"><span class="nav-icon">⭐</span>Avis</a>
+      <a class="nav-item" onclick="showPage('vouches')"><span class="nav-icon">✅</span>Vouches</a>
+      <a class="nav-item" onclick="showPage('announce')"><span class="nav-icon">📣</span>Annonces</a>
+      <div class="nav-section">Référence</div>
+      <a class="nav-item" onclick="showPage('commands')"><span class="nav-icon">📋</span>Commandes Discord</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <h1>🏠 Dashboard</h1>
+      <p class="subtitle">Vue d'ensemble de Ohio Paradise Bot</p>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value" id="stat-tickets">0</div><div class="stat-label">Tickets ouverts</div></div>
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-orders">0</div><div class="stat-label">Commandes actives</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value" id="stat-reviews">0</div><div class="stat-label">Avis reçus</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-vouches">0</div><div class="stat-label">Vouches totaux</div></div>
+        <div class="stat-card"><div class="stat-icon">💱</div><div class="stat-value">Live</div><div class="stat-label">Taux exchange</div></div>
+        <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value" id="stat-payments">0</div><div class="stat-label">Méthodes paiement</div></div>
+      </div>
+
+      <div class="alert alert-info">💡 Configure d'abord les <strong>Tickets</strong> et les <strong>Paiements</strong>, puis utilise <code>/ticket-panel</code> dans Discord pour déployer le panneau.</div>
+      <div class="alert alert-success">✅ Ce dashboard modifie la configuration MongoDB. Les changements sont appliqués en temps réel sur le bot.</div>
+
+      <div class="card">
+        <div class="card-title"><span>🔗</span> Connexion MongoDB</div>
+        <div class="form-group">
+          <label>MONGO_URL (Railway)</label>
+          <input type="password" id="mongo-url" placeholder="mongodb+srv://..." />
+        </div>
+        <div class="form-group">
+          <label>Guild ID Discord</label>
+          <input type="text" id="guild-id" placeholder="123456789012345678" />
+        </div>
+        <button class="btn btn-primary" onclick="saveConnection()">💾 Sauvegarder la connexion</button>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="page" id="page-config">
+      <h1>⚙️ Configuration</h1>
+      <p class="subtitle">Paramètres généraux du bot</p>
+      <div class="alert alert-info">Ces valeurs correspondent aux commandes <code>/config set-*</code> dans Discord.</div>
+      <div class="card">
+        <div class="card-title"><span>📢</span> Channels Discord</div>
+        <div class="grid-2">
+          <div class="form-group"><label>Channel Logs (ID)</label><input id="cfg-log" placeholder="ID du channel" /></div>
+          <div class="form-group"><label>Channel Avis (ID)</label><input id="cfg-review" placeholder="ID du channel" /></div>
+          <div class="form-group"><label>Channel Vouches (ID)</label><input id="cfg-vouch" placeholder="ID du channel" /></div>
+          <div class="form-group"><label>Channel Annonces (ID)</label><input id="cfg-announce" placeholder="ID du channel" /></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>👮</span> Rôles & Catégories</div>
+        <div class="grid-2">
+          <div class="form-group"><label>Rôle Staff (ID)</label><input id="cfg-staff" placeholder="ID du rôle" /></div>
+          <div class="form-group"><label>Catégorie Tickets (ID)</label><input id="cfg-cat" placeholder="ID de la catégorie" /></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Sauvegarder</button>
+      <div class="separator"></div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes correspondantes</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/config set-log #channel</div><div class="cmd-desc">Définit le channel de logs</div></div><button class="copy-btn" data-copy="/config set-log">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/config set-staff-role @role</div><div class="cmd-desc">Définit le rôle staff</div></div><button class="copy-btn" data-copy="/config set-staff-role">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/config set-ticket-category #catégorie</div><div class="cmd-desc">Catégorie pour les channels tickets</div></div><button class="copy-btn" data-copy="/config set-ticket-category">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/config view</div><div class="cmd-desc">Affiche la config actuelle en embed</div></div><button class="copy-btn" data-copy="/config view">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="page-tickets">
+      <h1>🎫 Système de Tickets</h1>
+      <p class="subtitle">Configure le panneau de tickets et ses boutons</p>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title"><span>🎨</span> Embed du panneau</div>
+            <div class="form-group"><label>Titre</label><input id="tp-title" value="🛍️ Support & Achats" oninput="updateTicketPreview()" /></div>
+            <div class="form-group"><label>Description</label><textarea id="tp-desc" oninput="updateTicketPreview()">Bienvenue ! Clique sur un bouton ci-dessous pour ouvrir un ticket.</textarea></div>
+            <div class="form-group"><label>Couleur (hex)</label><input id="tp-color" type="color" value="#5865F2" oninput="updateTicketPreview()" style="height:40px;cursor:pointer;" /></div>
+            <div class="form-group"><label>Footer</label><input id="tp-footer" value="Ohio Paradise" oninput="updateTicketPreview()" /></div>
+            <div class="form-group"><label>URL Thumbnail</label><input id="tp-thumb" placeholder="https://..." oninput="updateTicketPreview()" /></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>🔘</span> Boutons <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddBtn()">+ Ajouter</button></div>
+            <div class="btn-list" id="btn-list"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title"><span>👁️</span> Prévisualisation</div>
+            <div class="discord-mock">
+              <div class="discord-msg">
+                <div class="discord-avatar">🤖</div>
+                <div class="discord-content">
+                  <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+                  <div id="ticket-preview-embed"></div>
+                  <div class="discord-buttons" id="ticket-preview-buttons"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>📋</span> Déploiement</div>
+            <div class="cmd-ref"><div><div class="cmd-name">/ticket-panel #channel</div><div class="cmd-desc">Envoie le panneau dans le channel Discord</div></div><button class="copy-btn" data-copy="/ticket-panel">Copier</button></div>
+            <div class="cmd-ref"><div><div class="cmd-name">/ticket-close [raison]</div><div class="cmd-desc">Ferme le ticket actuel</div></div><button class="copy-btn" data-copy="/ticket-close">Copier</button></div>
+            <div class="cmd-ref"><div><div class="cmd-name">/ticket-add @user</div><div class="cmd-desc">Ajoute un membre au ticket</div></div><button class="copy-btn" data-copy="/ticket-add">Copier</button></div>
+            <div class="cmd-ref"><div><div class="cmd-name">/ticket-note [texte]</div><div class="cmd-desc">Ajoute une note interne (staff only)</div></div><button class="copy-btn" data-copy="/ticket-note">Copier</button></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-success" onclick="saveTicketPanel()">💾 Sauvegarder & Appliquer</button>
+    </div>
+
+    <!-- EXCHANGE -->
+    <div class="page" id="page-exchange">
+      <h1>💱 Système d'Exchange</h1>
+      <p class="subtitle">Configure les paires, frais et limites d'échange</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span>⚙️</span> Paramètres globaux</div>
+          <div class="form-group"><label>Frais globaux (%)</label><input id="exc-fee" type="number" value="5" min="0" max="50" step="0.1" /></div>
+          <div class="form-group"><label>Montant minimum</label><input id="exc-min" type="number" value="5" /></div>
+          <div class="form-group"><label>Montant maximum</label><input id="exc-max" type="number" value="5000" /></div>
+          <button class="btn btn-primary" onclick="saveExchange()">💾 Sauvegarder</button>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>🔗</span> Paires actives</div>
+          <div id="pairs-list"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="toggleAllPairs()">Toggle tout</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>💱</span> Frais personnalisés par paire</div>
+        <div class="alert alert-info">Laisse vide pour utiliser le frais global. Remplis une valeur pour surcharger uniquement cette paire.</div>
+        <div id="custom-fees-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>📊</span> Simulateur de calcul</div>
+        <div class="flex-row" style="flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Montant</label><input id="sim-amount" type="number" value="100" oninput="simulate()" /></div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>De</label>
+            <select id="sim-from" oninput="simulate()">
+              <option>LTC</option><option>BTC</option><option>ETH</option><option>PAYPAL</option><option>CASHAPP</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Vers</label>
+            <select id="sim-to" oninput="simulate()">
+              <option>PAYPAL</option><option>LTC</option><option>BTC</option><option>ETH</option><option>CASHAPP</option>
+            </select>
+          </div>
+        </div>
+        <div id="sim-result" class="discord-mock" style="min-height:60px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes correspondantes</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/exchange-calc [from] [to] [montant]</div><div class="cmd-desc">Calcule un échange avec frais et taux en temps réel</div></div><button class="copy-btn" data-copy="/exchange-calc from:LTC to:PAYPAL amount:50">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/exchange-rates</div><div class="cmd-desc">Affiche tous les taux actuels</div></div><button class="copy-btn" data-copy="/exchange-rates">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="page" id="page-payment">
+      <h1>💳 Fiches de Paiement</h1>
+      <p class="subtitle">Configure tes méthodes de paiement (PayPal, Crypto, etc.)</p>
+      <button class="btn btn-primary" style="margin-bottom:20px" onclick="openAddPayment()">+ Nouvelle méthode</button>
+      <div class="grid-2" id="payment-list"></div>
+      <div class="separator"></div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes correspondantes</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/payment-show [méthode]</div><div class="cmd-desc">Affiche la fiche en embed dans Discord</div></div><button class="copy-btn" data-copy="/payment-show method:paypal">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/payment-show [méthode] user:@user</div><div class="cmd-desc">Envoie la fiche en DM au client</div></div><button class="copy-btn" data-copy="/payment-show method:ltc user:@client">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- EMBED BUILDER -->
+    <div class="page" id="page-embed">
+      <h1>🎨 Embed Builder</h1>
+      <p class="subtitle">Construis et envoie des embeds personnalisés</p>
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title"><span>✏️</span> Éditeur</div>
+            <div class="form-group"><label>Titre</label><input id="eb-title" placeholder="Titre de l'embed" oninput="updateEmbedPreview()" /></div>
+            <div class="form-group"><label>Description</label><textarea id="eb-desc" placeholder="Description..." oninput="updateEmbedPreview()" style="min-height:100px;"></textarea></div>
+            <div class="form-group"><label>Couleur</label><input id="eb-color" type="color" value="#5865F2" oninput="updateEmbedPreview()" style="height:40px;cursor:pointer;" /></div>
+            <div class="form-group"><label>Footer</label><input id="eb-footer" placeholder="Texte du footer" oninput="updateEmbedPreview()" /></div>
+            <div class="form-group"><label>URL Image principale</label><input id="eb-image" placeholder="https://..." oninput="updateEmbedPreview()" /></div>
+            <div class="form-group"><label>URL Thumbnail</label><input id="eb-thumb" placeholder="https://..." oninput="updateEmbedPreview()" /></div>
+            <div class="separator"></div>
+            <div class="card-title"><span>📌</span> Fields</div>
+            <div id="eb-fields-list"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addEmbedField()">+ Ajouter un field</button>
+            <div class="separator"></div>
+            <div class="form-group"><label>Sauvegarder comme template</label>
+              <div class="input-row">
+                <div class="form-group"><input id="eb-tpl-name" placeholder="Nom du template" /></div>
+                <button class="btn btn-primary btn-sm" onclick="saveEmbedTemplate()">💾</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title"><span>👁️</span> Prévisualisation</div>
+            <div class="discord-mock">
+              <div class="discord-msg">
+                <div class="discord-avatar">🤖</div>
+                <div class="discord-content">
+                  <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+                  <div id="embed-preview"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>📤</span> Envoi</div>
+            <div class="form-group"><label>Channel ID de destination</label><input id="eb-channel" placeholder="ID du channel Discord" /></div>
+            <button class="btn btn-success" onclick="sendEmbed()">📤 Envoyer dans Discord</button>
+            <div class="separator"></div>
+            <div class="card-title" style="margin-bottom:10px;"><span>📋</span> Templates sauvegardés</div>
+            <div id="eb-templates-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div class="card-title"><span>📋</span> Commandes correspondantes</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/embed-create #channel title:"..." description:"..."</div><div class="cmd-desc">Crée un embed avec prévisualisation avant envoi</div></div><button class="copy-btn" data-copy="/embed-create channel:#annonces title:&quot;Nouveau produit&quot; description:&quot;Disponible maintenant !&quot;">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/embed-create #channel template:"nom"</div><div class="cmd-desc">Charge et envoie un template sauvegardé</div></div><button class="copy-btn" data-copy="/embed-create channel:#annonces template:&quot;mon-template&quot;">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/embed-template list</div><div class="cmd-desc">Liste tous les templates</div></div><button class="copy-btn" data-copy="/embed-template list">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/embed-template delete [nom]</div><div class="cmd-desc">Supprime un template</div></div><button class="copy-btn" data-copy="/embed-template delete name:&quot;mon-template&quot;">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <h1>📦 Commandes / Orders</h1>
+      <p class="subtitle">Suivi des commandes clients</p>
+      <div class="card">
+        <div class="card-title"><span>📊</span> Statuts disponibles</div>
+        <div class="flex-row" style="flex-wrap:wrap;gap:8px;">
+          <span class="badge badge-yellow">🟡 En attente</span>
+          <span class="badge badge-green">🟢 Payé</span>
+          <span class="badge badge-blue">✅ Livré</span>
+          <span class="badge badge-red">🔴 Annulé</span>
+          <span style="background:rgba(52,152,219,0.3);color:#3498db;display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;">🔵 Remboursé</span>
+        </div>
+      </div>
+      <div class="discord-mock" style="margin-bottom:20px;">
+        <div class="discord-msg">
+          <div class="discord-avatar">🤖</div>
+          <div class="discord-content">
+            <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+            <div class="embed" style="border-color:#F1C40F">
+              <div class="embed-title">📦 Commande créée — <code>OP-1A2B3C</code></div>
+              <div class="embed-fields inline">
+                <div class="embed-field"><div class="embed-field-name">Client</div><div class="embed-field-value">@client</div></div>
+                <div class="embed-field"><div class="embed-field-name">Produit</div><div class="embed-field-value">Pack Premium</div></div>
+                <div class="embed-field"><div class="embed-field-name">Montant</div><div class="embed-field-value">25 EUR</div></div>
+                <div class="embed-field"><div class="embed-field-name">Paiement</div><div class="embed-field-value">PayPal</div></div>
+                <div class="embed-field"><div class="embed-field-name">Statut</div><div class="embed-field-value">🟡 En attente</div></div>
+              </div>
+              <div class="embed-footer">Staff: Admin • Maintenant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes Discord</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/order-create @user [produit] [montant] [devise] [paiement]</div><div class="cmd-desc">Crée une commande pour un client</div></div><button class="copy-btn" data-copy="/order-create user:@client product:&quot;Pack Premium&quot; amount:25 currency:EUR payment:paypal">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/order-status [order_id] [statut] [note]</div><div class="cmd-desc">Met à jour le statut + notifie le client en DM</div></div><button class="copy-btn" data-copy="/order-status order_id:OP-1A2B3C status:paid note:&quot;Paiement recu&quot;">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/order-history [@user]</div><div class="cmd-desc">Historique des 10 dernières commandes</div></div><button class="copy-btn" data-copy="/order-history user:@client">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="page" id="page-reviews">
+      <h1>⭐ Système d'Avis</h1>
+      <p class="subtitle">Avis clients après achat</p>
+      <div class="discord-mock" style="margin-bottom:20px;">
+        <div class="discord-msg">
+          <div class="discord-avatar">🤖</div>
+          <div class="discord-content">
+            <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+            <div class="embed" style="border-color:#2ecc71">
+              <div class="embed-title">⭐ Nouvel Avis</div>
+              <div class="embed-desc">Service ultra rapide et produit parfait !</div>
+              <div class="embed-fields inline">
+                <div class="embed-field"><div class="embed-field-name">Note</div><div class="embed-field-value">⭐⭐⭐⭐⭐</div></div>
+                <div class="embed-field"><div class="embed-field-name">Auteur</div><div class="embed-field-value">@client</div></div>
+                <div class="embed-field"><div class="embed-field-name">Commande</div><div class="embed-field-value">OP-1A2B3C</div></div>
+              </div>
+              <div class="embed-footer">Ohio Paradise • Maintenant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes Discord</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/review [stars] [comment] [order_id]</div><div class="cmd-desc">Laisser un avis (1-5 étoiles + commentaire)</div></div><button class="copy-btn" data-copy="/review stars:5 comment:&quot;Parfait !&quot; order_id:OP-1A2B3C">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/config set-review-channel #channel</div><div class="cmd-desc">Channel où les avis sont postés automatiquement</div></div><button class="copy-btn" data-copy="/config set-review-channel">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- VOUCHES -->
+    <div class="page" id="page-vouches">
+      <h1>✅ Système de Vouches</h1>
+      <p class="subtitle">Réputation des membres + rôles automatiques par paliers</p>
+      <div class="card">
+        <div class="card-title"><span>🏆</span> Paliers de rôles automatiques</div>
+        <div class="alert alert-info">Configure les rôles attribués automatiquement selon le nombre de vouches reçus.</div>
+        <div id="vouch-roles-list"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="addVouchRole()">+ Ajouter un palier</button>
+        <button class="btn btn-primary" style="margin-top:12px;margin-left:8px" onclick="saveVouchRoles()">💾 Sauvegarder</button>
+      </div>
+      <div class="discord-mock" style="margin-bottom:20px;">
+        <div class="discord-msg">
+          <div class="discord-avatar">🤖</div>
+          <div class="discord-content">
+            <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+            <div class="embed" style="border-color:#2ecc71">
+              <div class="embed-title">✅ Vouches — membre123</div>
+              <div class="embed-fields inline">
+                <div class="embed-field"><div class="embed-field-name">Total</div><div class="embed-field-value">12 vouches</div></div>
+              </div>
+              <div class="embed-desc">• @admin — *Excellent vendeur !*
+• @user1 — *Livraison rapide*
+• @user2</div>
+              <div class="embed-footer">Ohio Paradise</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes Discord</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/vouch @user [comment]</div><div class="cmd-desc">Laisser un vouch à un membre</div></div><button class="copy-btn" data-copy="/vouch user:@membre comment:Super vendeur">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/vouches [@user]</div><div class="cmd-desc">Voir les vouches d'un membre</div></div><button class="copy-btn" data-copy="/vouches user:@membre">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCE -->
+    <div class="page" id="page-announce">
+      <h1>📣 Annonces</h1>
+      <p class="subtitle">Envoyer ou planifier des annonces embed dans Discord</p>
+      <div class="card">
+        <div class="card-title"><span>⏰</span> Exemples d'expressions cron</div>
+        <div class="grid-3">
+          <div class="rate-card"><div class="rate-pair">Chaque lundi à 9h</div><div style="font-family:monospace;font-size:14px;color:var(--accent2);">0 9 * * 1</div></div>
+          <div class="rate-card"><div class="rate-pair">Tous les jours à midi</div><div style="font-family:monospace;font-size:14px;color:var(--accent2);">0 12 * * *</div></div>
+          <div class="rate-card"><div class="rate-pair">Chaque heure</div><div style="font-family:monospace;font-size:14px;color:var(--accent2);">0 * * * *</div></div>
+        </div>
+      </div>
+      <div class="discord-mock" style="margin-bottom:20px;">
+        <div class="discord-msg">
+          <div class="discord-avatar">🤖</div>
+          <div class="discord-content">
+            <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+            <div class="embed" style="border-color:#e94560">
+              <div class="embed-title">🔥 Nouvelle offre disponible !</div>
+              <div class="embed-desc">Pack Premium en promotion cette semaine seulement.
+Ouvre un ticket pour commander !</div>
+              <div class="embed-footer">Ohio Paradise • Maintenant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📋</span> Commandes Discord</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/announce #channel [title] [description] [color] [image]</div><div class="cmd-desc">Envoi immédiat d'une annonce embed</div></div><button class="copy-btn" data-copy="/announce channel:#annonces title:Promo description:Offre speciale cette semaine">Copier</button></div>
+        <div class="cmd-ref"><div><div class="cmd-name">/announce #channel [title] [description] cron:&quot;0 9 * * 1&quot;</div><div class="cmd-desc">Planification récurrente (cron)</div></div><button class="copy-btn" data-copy="/announce channel:#annonces title:Rappel description:Notre shop est ouvert cron:0 9 * * 1">Copier</button></div>
+      </div>
+    </div>
+
+    <!-- COMMANDS -->
+    <div class="page" id="page-commands">
+      <h1>📋 Référence des Commandes</h1>
+      <p class="subtitle">Toutes les commandes Discord du bot Ohio Paradise</p>
+      <div class="tabs">
+        <div class="tab active" onclick="filterCmds('all', this)">Toutes</div>
+        <div class="tab" onclick="filterCmds('ticket', this)">Tickets</div>
+        <div class="tab" onclick="filterCmds('exchange', this)">Exchange</div>
+        <div class="tab" onclick="filterCmds('payment', this)">Paiement</div>
+        <div class="tab" onclick="filterCmds('other', this)">Autres</div>
+      </div>
+      <div id="all-commands"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL ADD BUTTON -->
+<div class="modal-overlay" id="modal-btn">
+  <div class="modal">
+    <h3>➕ Ajouter un bouton</h3>
+    <div class="form-group"><label>Label du bouton</label><input id="btn-label" placeholder="ex: 🛍️ Acheter" /></div>
+    <div class="form-group"><label>Catégorie (interne)</label><input id="btn-cat" placeholder="ex: achat" /></div>
+    <div class="form-group"><label>Style</label>
+      <select id="btn-style">
+        <option value="Primary">Primary (Bleu)</option>
+        <option value="Secondary">Secondary (Gris)</option>
+        <option value="Success">Success (Vert)</option>
+        <option value="Danger">Danger (Rouge)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Emoji (optionnel)</label><input id="btn-emoji" placeholder="ex: 🛍️" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-btn')">Annuler</button>
+      <button class="btn btn-primary" onclick="addButton()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD PAYMENT -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal">
+    <h3>💳 Nouvelle méthode de paiement</h3>
+    <div class="form-group"><label>Nom</label><input id="pm-name" placeholder="ex: PayPal" /></div>
+    <div class="form-group"><label>Type</label>
+      <select id="pm-type">
+        <option value="paypal">PayPal</option>
+        <option value="ltc">Litecoin (LTC)</option>
+        <option value="btc">Bitcoin (BTC)</option>
+        <option value="eth">Ethereum (ETH)</option>
+        <option value="cashapp">CashApp</option>
+        <option value="virement">Virement bancaire</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Adresse / Contact</label><input id="pm-address" placeholder="ex: paypal@email.com ou adresse crypto" /></div>
+    <div class="form-group"><label>Instructions</label><textarea id="pm-instructions" placeholder="Instructions pour le payer..."></textarea></div>
+    <div class="form-group"><label>Note</label><input id="pm-note" placeholder="Note supplémentaire" /></div>
+    <div class="form-group"><label>URL QR Code</label><input id="pm-qr" placeholder="https://..." /></div>
+    <div class="form-group"><label>Couleur</label><input id="pm-color" type="color" value="#5865F2" style="height:40px;cursor:pointer;" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-payment')">Annuler</button>
+      <button class="btn btn-primary" onclick="addPaymentMethod()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+const state = {
+  ticketButtons: [],
+  paymentMethods: [],
+  embedFields: [],
+  embedTemplates: [],
+  vouchRoles: [],
+  activePairs: ['LTC_PAYPAL','BTC_PAYPAL','ETH_PAYPAL','LTC_BTC','ETH_LTC'],
+  excFee: 5, excMin: 5, excMax: 5000,
+  customFees: {},
+};
+
+const ALL_PAIRS = ['LTC_PAYPAL','BTC_PAYPAL','ETH_PAYPAL','LTC_BTC','ETH_LTC','BTC_LTC','LTC_CASHAPP','BTC_CASHAPP'];
+
+// ============ NAV ============
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'tickets') updateTicketPreview();
+  if (name === 'embed') { updateEmbedPreview(); renderEmbedTemplates(); }
+  if (name === 'exchange') { renderPairs(); renderCustomFees(); simulate(); }
+  if (name === 'payment') renderPayments();
+  if (name === 'vouches') renderVouchRoles();
+  if (name === 'commands') renderAllCommands();
+}
+
+// ============ MODAL ============
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openAddBtn() { document.getElementById('btn-label').value=''; document.getElementById('btn-cat').value=''; document.getElementById('btn-emoji').value=''; openModal('modal-btn'); }
+function openAddPayment() { openModal('modal-payment'); }
+
+// ============ CLIPBOARD ============
+function copy(txt, btn) {
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = '✅ Copié!';
+    setTimeout(() => btn.textContent = 'Copier', 2000);
+  });
+}
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.copy-btn[data-copy]');
+  if (btn) copy(btn.dataset.copy, btn);
+});
+
+// ============ TICKETS ============
+function addButton() {
+  const label = document.getElementById('btn-label').value.trim();
+  const cat = document.getElementById('btn-cat').value.trim() || label.toLowerCase().replace(/\s+/g,'-');
+  const style = document.getElementById('btn-style').value;
+  const emoji = document.getElementById('btn-emoji').value.trim() || null;
+  if (!label) return alert('Label requis');
+  state.ticketButtons.push({ id: 'btn_' + Date.now(), label, category: cat, style, emoji });
+  closeModal('modal-btn');
+  renderBtnList();
+  updateTicketPreview();
+}
+
+function renderBtnList() {
+  const el = document.getElementById('btn-list');
+  if (!state.ticketButtons.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;">Aucun bouton configuré.</p>'; return; }
+  const styleColors = { Primary: '#5865F2', Secondary: '#4e5058', Success: '#2d7d46', Danger: '#c62828' };
+  el.innerHTML = state.ticketButtons.map((b,i) => `
+    <div class="btn-item">
+      <div class="color-dot" style="background:${styleColors[b.style]||'#5865F2'}"></div>
+      <div class="btn-item-info">
+        <div class="btn-item-label">${b.emoji||''} ${b.label}</div>
+        <div class="btn-item-cat">Catégorie: ${b.category} • ${b.style}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeBtn(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+function removeBtn(i) { state.ticketButtons.splice(i,1); renderBtnList(); updateTicketPreview(); }
+
+function updateTicketPreview() {
+  const title = document.getElementById('tp-title').value || 'Support';
+  const desc = document.getElementById('tp-desc').value || '';
+  const color = document.getElementById('tp-color').value || '#5865F2';
+  const footer = document.getElementById('tp-footer').value || 'Ohio Paradise';
+
+  document.getElementById('ticket-preview-embed').innerHTML = `
+    <div class="embed" style="border-color:${color}">
+      <div class="embed-title">${escHtml(title)}</div>
+      <div class="embed-desc">${escHtml(desc)}</div>
+      <div class="embed-footer">${escHtml(footer)}</div>
+    </div>`;
+
+  const styleColors = { Primary: '#5865F2', Secondary: '#4e5058', Success: '#2d7d46', Danger: '#c62828' };
+  document.getElementById('ticket-preview-buttons').innerHTML = state.ticketButtons.map(b =>
+    `<button class="d-btn ${b.style.toLowerCase()}" style="background:${styleColors[b.style]||'#5865F2'}">${b.emoji||''} ${b.label}</button>`
+  ).join('');
+}
+
+function saveTicketPanel() {
+  const panel = {
+    embed: {
+      title: document.getElementById('tp-title').value,
+      description: document.getElementById('tp-desc').value,
+      color: document.getElementById('tp-color').value,
+      footer: document.getElementById('tp-footer').value,
+      thumbnailUrl: document.getElementById('tp-thumb').value || null,
+    },
+    buttons: state.ticketButtons,
+  };
+  localStorage.setItem('ohio_ticket_panel', JSON.stringify(panel));
+  alert('✅ Configuration du panneau sauvegardée en local !\nUtilise /ticket-panel #channel dans Discord pour déployer.');
+}
+
+// ============ EXCHANGE ============
+function renderPairs() {
+  const el = document.getElementById('pairs-list');
+  el.innerHTML = ALL_PAIRS.map(p => `
+    <div class="flex-between" style="margin-bottom:10px;">
+      <span style="font-size:14px;font-family:monospace;">${p.replace('_',' → ')}</span>
+      <label class="toggle"><input type="checkbox" ${state.activePairs.includes(p)?'checked':''} onchange="togglePair('${p}',this.checked)"><div class="toggle-slider"></div></label>
+    </div>`).join('');
+}
+
+function togglePair(pair, active) {
+  if (active && !state.activePairs.includes(pair)) state.activePairs.push(pair);
+  if (!active) state.activePairs = state.activePairs.filter(p => p !== pair);
+}
+
+function toggleAllPairs() {
+  if (state.activePairs.length === ALL_PAIRS.length) state.activePairs = [];
+  else state.activePairs = [...ALL_PAIRS];
+  renderPairs();
+}
+
+function renderCustomFees() {
+  const el = document.getElementById('custom-fees-list');
+  el.innerHTML = ALL_PAIRS.map(p => `
+    <div class="flex-row" style="margin-bottom:10px;">
+      <span style="font-family:monospace;font-size:13px;width:160px;flex-shrink:0;">${p.replace('_',' → ')}</span>
+      <input type="number" placeholder="Défaut (${state.excFee}%)" value="${state.customFees[p]||''}" min="0" max="50" step="0.1" style="width:120px;"
+        onchange="state.customFees['${p}']=parseFloat(this.value)||null" />
+      <span style="color:var(--muted);font-size:12px;">%</span>
+    </div>`).join('');
+}
+
+function saveExchange() {
+  state.excFee = parseFloat(document.getElementById('exc-fee').value)||5;
+  state.excMin = parseFloat(document.getElementById('exc-min').value)||5;
+  state.excMax = parseFloat(document.getElementById('exc-max').value)||5000;
+  localStorage.setItem('ohio_exchange', JSON.stringify({ feePercent: state.excFee, minAmount: state.excMin, maxAmount: state.excMax, activePairs: state.activePairs, customFees: state.customFees }));
+  alert('✅ Config exchange sauvegardée !');
+  renderCustomFees();
+}
+
+function simulate() {
+  const amount = parseFloat(document.getElementById('sim-amount')?.value)||100;
+  const from = document.getElementById('sim-from')?.value||'LTC';
+  const to = document.getElementById('sim-to')?.value||'PAYPAL';
+  const pairKey = `${from}_${to}`;
+  const fee = state.customFees[pairKey] ?? state.excFee ?? 5;
+  const mockRates = { LTC: 85, BTC: 63000, ETH: 3200, PAYPAL: 1, CASHAPP: 1, EUR: 1, USD: 1 };
+  const fromUSD = mockRates[from]||1;
+  const toUSD = mockRates[to]||1;
+  const rawResult = (amount * fromUSD) / toUSD;
+  const feeAmt = rawResult * (fee/100);
+  const finalResult = rawResult - feeAmt;
+  const el = document.getElementById('sim-result');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="embed" style="border-color:#F1C40F">
+      <div class="embed-title">💱 Simulateur d'échange</div>
+      <div class="embed-fields inline">
+        <div class="embed-field"><div class="embed-field-name">Vous envoyez</div><div class="embed-field-value">${amount} ${from}</div></div>
+        <div class="embed-field"><div class="embed-field-name">Vous recevez</div><div class="embed-field-value">${finalResult.toFixed(6)} ${to}</div></div>
+        <div class="embed-field"><div class="embed-field-name">Frais</div><div class="embed-field-value">${fee}% (${feeAmt.toFixed(6)} ${to})</div></div>
+      </div>
+      <div class="embed-footer">Taux mockés (preview) • Ohio Paradise</div>
+    </div>`;
+}
+
+// ============ PAYMENT ============
+function addPaymentMethod() {
+  const method = {
+    id: 'pm_' + Date.now(),
+    name: document.getElementById('pm-name').value || 'Paiement',
+    type: document.getElementById('pm-type').value,
+    address: document.getElementById('pm-address').value || null,
+    instructions: document.getElementById('pm-instructions').value || null,
+    note: document.getElementById('pm-note').value || null,
+    qrUrl: document.getElementById('pm-qr').value || null,
+    color: document.getElementById('pm-color').value,
+    enabled: true,
+  };
+  state.paymentMethods.push(method);
+  closeModal('modal-payment');
+  renderPayments();
+}
+
+function renderPayments() {
+  const el = document.getElementById('payment-list');
+  if (!state.paymentMethods.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;grid-column:span 2;">Aucune méthode configurée.</p>'; return; }
+  el.innerHTML = state.paymentMethods.map((m,i) => `
+    <div class="payment-card">
+      <div class="payment-card-header">
+        <div style="width:12px;height:12px;border-radius:50%;background:${m.color};flex-shrink:0;"></div>
+        <strong>${m.name}</strong>
+        <span class="payment-type-badge">${m.type.toUpperCase()}</span>
+        <label class="toggle" style="margin-left:auto"><input type="checkbox" ${m.enabled?'checked':''} onchange="state.paymentMethods[${i}].enabled=this.checked"><div class="toggle-slider"></div></label>
+      </div>
+      ${m.address ? `<div style="font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:6px;"><code>${m.address}</code></div>`:''}
+      ${m.instructions ? `<div style="font-size:12px;color:#dbdee1;margin-bottom:6px;">${escHtml(m.instructions)}</div>`:''}
+      <div class="flex-row" style="margin-top:8px;gap:6px;">
+        <button class="btn btn-danger btn-sm" onclick="removePayment(${i})">🗑️ Supprimer</button>
+      </div>
+    </div>`).join('');
+}
+
+function removePayment(i) { state.paymentMethods.splice(i,1); renderPayments(); }
+
+// ============ EMBED BUILDER ============
+function addEmbedField() {
+  state.embedFields.push({ name: '', value: '', inline: false });
+  renderEmbedFields();
+}
+
+function renderEmbedFields() {
+  const el = document.getElementById('eb-fields-list');
+  el.innerHTML = state.embedFields.map((f,i) => `
+    <div style="background:var(--discord-darker);border-radius:6px;padding:10px;margin-bottom:8px;">
+      <div class="input-row" style="margin-bottom:6px;">
+        <div class="form-group"><label>Nom</label><input value="${escHtml(f.name)}" oninput="state.embedFields[${i}].name=this.value;updateEmbedPreview()" /></div>
+        <div class="form-group"><label>Valeur</label><input value="${escHtml(f.value)}" oninput="state.embedFields[${i}].value=this.value;updateEmbedPreview()" /></div>
+      </div>
+      <div class="flex-between">
+        <label class="flex-row" style="gap:6px;cursor:pointer;font-size:12px;"><input type="checkbox" ${f.inline?'checked':''} onchange="state.embedFields[${i}].inline=this.checked;updateEmbedPreview()" /> Inline</label>
+        <button class="btn btn-danger btn-sm" onclick="state.embedFields.splice(${i},1);renderEmbedFields();updateEmbedPreview()">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function updateEmbedPreview() {
+  const title = document.getElementById('eb-title')?.value||'';
+  const desc = document.getElementById('eb-desc')?.value||'';
+  const color = document.getElementById('eb-color')?.value||'#5865F2';
+  const footer = document.getElementById('eb-footer')?.value||'';
+  const image = document.getElementById('eb-image')?.value||'';
+  const thumb = document.getElementById('eb-thumb')?.value||'';
+
+  let fieldsHtml = '';
+  if (state.embedFields.length) {
+    const hasInline = state.embedFields.some(f => f.inline);
+    fieldsHtml = `<div class="embed-fields ${hasInline?'inline':''}">` +
+      state.embedFields.filter(f => f.name||f.value).map(f =>
+        `<div class="embed-field"><div class="embed-field-name">${escHtml(f.name)}</div><div class="embed-field-value">${escHtml(f.value)}</div></div>`
+      ).join('') + '</div>';
+  }
+
+  document.getElementById('embed-preview').innerHTML = `
+    <div class="embed" style="border-color:${color}">
+      ${title ? `<div class="embed-title">${escHtml(title)}</div>` : ''}
+      ${desc ? `<div class="embed-desc">${escHtml(desc)}</div>` : ''}
+      ${fieldsHtml}
+      ${image ? `<div class="embed-image"><img src="${image}" onerror="this.style.display='none'" /></div>` : ''}
+      ${footer ? `<div class="embed-footer">${escHtml(footer)}</div>` : ''}
+    </div>`;
+}
+
+function saveEmbedTemplate() {
+  const name = document.getElementById('eb-tpl-name').value.trim();
+  if (!name) return alert('Nom du template requis');
+  const embedData = {
+    title: document.getElementById('eb-title').value,
+    description: document.getElementById('eb-desc').value,
+    color: document.getElementById('eb-color').value,
+    footer: document.getElementById('eb-footer').value,
+    imageUrl: document.getElementById('eb-image').value || null,
+    thumbnailUrl: document.getElementById('eb-thumb').value || null,
+    fields: [...state.embedFields],
+  };
+  const idx = state.embedTemplates.findIndex(t => t.name === name);
+  if (idx !== -1) state.embedTemplates[idx] = { name, embed: embedData };
+  else state.embedTemplates.push({ name, embed: embedData });
+  localStorage.setItem('ohio_embed_templates', JSON.stringify(state.embedTemplates));
+  document.getElementById('eb-tpl-name').value = '';
+  renderEmbedTemplates();
+  alert(`✅ Template "${name}" sauvegardé !`);
+}
+
+function renderEmbedTemplates() {
+  const el = document.getElementById('eb-templates-list');
+  if (!state.embedTemplates.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;">Aucun template.</p>'; return; }
+  el.innerHTML = state.embedTemplates.map((t,i) => `
+    <div class="flex-between" style="background:var(--discord-darker);border-radius:6px;padding:10px;margin-bottom:6px;">
+      <span style="font-size:14px;">📋 ${t.name}</span>
+      <div class="flex-row" style="gap:6px;">
+        <button class="btn btn-primary btn-sm" onclick="loadEmbedTemplate(${i})">Charger</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEmbedTemplate(${i})">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function loadEmbedTemplate(i) {
+  const t = state.embedTemplates[i].embed;
+  document.getElementById('eb-title').value = t.title||'';
+  document.getElementById('eb-desc').value = t.description||'';
+  document.getElementById('eb-color').value = t.color||'#5865F2';
+  document.getElementById('eb-footer').value = t.footer||'';
+  document.getElementById('eb-image').value = t.imageUrl||'';
+  document.getElementById('eb-thumb').value = t.thumbnailUrl||'';
+  state.embedFields = t.fields ? [...t.fields] : [];
+  renderEmbedFields();
+  updateEmbedPreview();
+}
+
+function deleteEmbedTemplate(i) { state.embedTemplates.splice(i,1); renderEmbedTemplates(); }
+
+function sendEmbed() {
+  alert('ℹ️ Dans Discord, utilise :\n/embed-create channel:#mon-channel title:"..." description:"..."\n\nOu sauvegarde un template et utilise :\n/embed-create channel:#mon-channel template:"nom"');
+}
+
+// ============ VOUCH ROLES ============
+function addVouchRole() {
+  state.vouchRoles.push({ threshold: 10, roleId: '' });
+  renderVouchRoles();
+}
+
+function renderVouchRoles() {
+  const el = document.getElementById('vouch-roles-list');
+  if (!state.vouchRoles.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;">Aucun palier configuré.</p>'; return; }
+  el.innerHTML = state.vouchRoles.map((vr,i) => `
+    <div class="flex-row" style="margin-bottom:10px;">
+      <div class="form-group" style="flex:1;margin:0;"><label>Vouches requis</label><input type="number" value="${vr.threshold}" onchange="state.vouchRoles[${i}].threshold=parseInt(this.value)" /></div>
+      <div class="form-group" style="flex:2;margin:0;"><label>ID du rôle Discord</label><input value="${vr.roleId}" placeholder="ID du rôle" onchange="state.vouchRoles[${i}].roleId=this.value" /></div>
+      <button class="btn btn-danger btn-sm" style="margin-top:20px;" onclick="state.vouchRoles.splice(${i},1);renderVouchRoles()">🗑️</button>
+    </div>`).join('');
+}
+
+function saveVouchRoles() {
+  localStorage.setItem('ohio_vouch_roles', JSON.stringify(state.vouchRoles));
+  alert('✅ Paliers de vouches sauvegardés !');
+}
+
+// ============ COMMANDS REF ============
+const COMMANDS = [
+  { name: '/ticket-panel #channel', desc: 'Déploie le panneau de tickets', cat: 'ticket' },
+  { name: '/ticket-close [raison]', desc: 'Ferme le ticket actuel', cat: 'ticket' },
+  { name: '/ticket-add @user', desc: 'Ajoute un membre au ticket', cat: 'ticket' },
+  { name: '/ticket-remove @user', desc: 'Retire un membre du ticket', cat: 'ticket' },
+  { name: '/ticket-note [texte]', desc: 'Note interne staff (invisible client)', cat: 'ticket' },
+  { name: '/exchange-calc [from] [to] [montant]', desc: 'Calcule un échange avec taux réel + frais', cat: 'exchange' },
+  { name: '/exchange-rates', desc: 'Affiche tous les taux actuels', cat: 'exchange' },
+  { name: '/payment-show [méthode]', desc: 'Affiche la fiche de paiement en embed', cat: 'payment' },
+  { name: '/payment-show [méthode] user:@user', desc: 'Envoie en DM au client', cat: 'payment' },
+  { name: '/embed-create #channel ...', desc: 'Crée un embed personnalisé', cat: 'other' },
+  { name: '/embed-template list', desc: 'Liste les templates d\'embeds', cat: 'other' },
+  { name: '/embed-template delete [nom]', desc: 'Supprime un template', cat: 'other' },
+  { name: '/order-create @user [produit]', desc: 'Crée une commande client', cat: 'other' },
+  { name: '/order-status [id] [statut]', desc: 'Mise à jour statut + notification DM', cat: 'other' },
+  { name: '/order-history [@user]', desc: 'Historique des commandes', cat: 'other' },
+  { name: '/review [stars] [comment]', desc: 'Laisser un avis 1-5 étoiles', cat: 'other' },
+  { name: '/vouch @user [comment]', desc: 'Laisser un vouch à un membre', cat: 'other' },
+  { name: '/vouches [@user]', desc: 'Voir les vouches d\'un membre', cat: 'other' },
+  { name: '/announce #channel [title] [desc] [cron]', desc: 'Annonce immédiate ou planifiée', cat: 'other' },
+  { name: '/config set-log #channel', desc: 'Définit le channel de logs', cat: 'other' },
+  { name: '/config set-staff-role @role', desc: 'Définit le rôle staff', cat: 'other' },
+  { name: '/config set-ticket-category', desc: 'Catégorie pour les channels tickets', cat: 'other' },
+  { name: '/config set-review-channel', desc: 'Channel pour les avis', cat: 'other' },
+  { name: '/config set-vouch-channel', desc: 'Channel pour les vouches', cat: 'other' },
+  { name: '/config view', desc: 'Affiche la configuration actuelle', cat: 'other' },
+];
+
+let currentFilter = 'all';
+function filterCmds(cat, tab) {
+  currentFilter = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderAllCommands();
+}
+
+function renderAllCommands() {
+  const filtered = currentFilter === 'all' ? COMMANDS : COMMANDS.filter(c => c.cat === currentFilter);
+  document.getElementById('all-commands').innerHTML = filtered.map(c => `
+    <div class="cmd-ref">
+      <div>
+        <div class="cmd-name">${c.name}</div>
+        <div class="cmd-desc">${c.desc}</div>
+      </div>
+      <button class="copy-btn" onclick="copy('${c.name.split(' ')[0]}')">Copier</button>
+    </div>`).join('');
+}
+
+// ============ UTILS ============
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function saveConfig() {
+  const cfg = {
+    logChannelId: document.getElementById('cfg-log').value,
+    reviewChannelId: document.getElementById('cfg-review').value,
+    vouchChannelId: document.getElementById('cfg-vouch').value,
+    announcementChannelId: document.getElementById('cfg-announce').value,
+    staffRoleId: document.getElementById('cfg-staff').value,
+    ticketCategoryId: document.getElementById('cfg-cat').value,
+  };
+  localStorage.setItem('ohio_config', JSON.stringify(cfg));
+  alert('✅ Config sauvegardée localement !\nApplique les mêmes valeurs via les commandes /config dans Discord.');
+}
+
+function saveConnection() {
+  localStorage.setItem('ohio_conn', JSON.stringify({ mongoUrl: document.getElementById('mongo-url').value, guildId: document.getElementById('guild-id').value }));
+  alert('✅ Connexion sauvegardée localement.');
+}
+
+// ============ LOAD FROM LOCALSTORAGE ============
+function loadSaved() {
+  const panel = JSON.parse(localStorage.getItem('ohio_ticket_panel')||'null');
+  if (panel) {
+    document.getElementById('tp-title').value = panel.embed?.title||'';
+    document.getElementById('tp-desc').value = panel.embed?.description||'';
+    document.getElementById('tp-color').value = panel.embed?.color||'#5865F2';
+    document.getElementById('tp-footer').value = panel.embed?.footer||'';
+    document.getElementById('tp-thumb').value = panel.embed?.thumbnailUrl||'';
+    state.ticketButtons = panel.buttons||[];
+    renderBtnList();
+  }
+  const exc = JSON.parse(localStorage.getItem('ohio_exchange')||'null');
+  if (exc) {
+    document.getElementById('exc-fee').value = exc.feePercent||5;
+    document.getElementById('exc-min').value = exc.minAmount||5;
+    document.getElementById('exc-max').value = exc.maxAmount||5000;
+    state.excFee = exc.feePercent||5;
+    state.excMin = exc.minAmount||5;
+    state.excMax = exc.maxAmount||5000;
+    if (exc.activePairs) state.activePairs = exc.activePairs;
+    if (exc.customFees) state.customFees = exc.customFees;
+  }
+  const tpls = JSON.parse(localStorage.getItem('ohio_embed_templates')||'[]');
+  state.embedTemplates = tpls;
+  const vr = JSON.parse(localStorage.getItem('ohio_vouch_roles')||'[]');
+  state.vouchRoles = vr;
+  const cfg = JSON.parse(localStorage.getItem('ohio_config')||'null');
+  if (cfg) {
+    if (cfg.logChannelId) document.getElementById('cfg-log').value = cfg.logChannelId;
+    if (cfg.reviewChannelId) document.getElementById('cfg-review').value = cfg.reviewChannelId;
+    if (cfg.vouchChannelId) document.getElementById('cfg-vouch').value = cfg.vouchChannelId;
+    if (cfg.staffRoleId) document.getElementById('cfg-staff').value = cfg.staffRoleId;
+    if (cfg.ticketCategoryId) document.getElementById('cfg-cat').value = cfg.ticketCategoryId;
+  }
+  const conn = JSON.parse(localStorage.getItem('ohio_conn')||'null');
+  if (conn) {
+    if (conn.mongoUrl) document.getElementById('mongo-url').value = conn.mongoUrl;
+    if (conn.guildId) document.getElementById('guild-id').value = conn.guildId;
+  }
+  updateTicketPreview();
+}
+
+document.addEventListener('DOMContentLoaded', loadSaved);
+</script>
+</body>
+</html>
