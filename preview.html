@@ -214,59 +214,52 @@
       <h1>🏠 Dashboard</h1>
       <p class="subtitle">Vue d'ensemble de Ohio Paradise Bot</p>
 
-      <div id="api-status-banner" class="alert alert-info">� Configure la connexion au bot ci-dessous pour activer les fonctions live.</div>
+      <div class="alert alert-info">💡 Utilise les <strong>Webhooks Discord</strong> pour envoyer des embeds directement dans tes channels — aucun serveur requis, marche partout.</div>
 
       <div class="card">
-        <div class="card-title"><span>🔗</span> Connexion au Bot (Railway API)</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>URL du bot Railway</label>
-            <input id="api-url" placeholder="https://votre-app.up.railway.app" />
-          </div>
-          <div class="form-group">
-            <label>Clé secrète (DASHBOARD_SECRET)</label>
-            <input type="password" id="api-secret" placeholder="ohio-secret" />
-          </div>
+        <div class="card-title"><span>🔗</span> Webhooks Discord</div>
+        <div class="alert alert-info" style="margin-bottom:16px;">
+          Pour créer un webhook : <strong>Channel Discord</strong> → Paramètres → Intégrations → Webhooks → Nouveau webhook → Copier l'URL
         </div>
-        <div class="flex-row">
-          <button class="btn btn-primary" onclick="saveApiConn()">💾 Sauvegarder</button>
-          <button class="btn btn-secondary" onclick="testApiConn()">🔍 Tester la connexion</button>
-          <span id="api-test-result" style="font-size:13px;color:var(--muted)"></span>
+        <div id="webhooks-list"></div>
+        <div class="input-row" style="margin-top:12px;">
+          <div class="form-group"><label>Nom du webhook</label><input id="wh-name" placeholder="ex: #annonces" /></div>
+          <div class="form-group"><label>URL du webhook</label><input id="wh-url" placeholder="https://discord.com/api/webhooks/..." /></div>
+          <button class="btn btn-primary btn-sm" style="margin-bottom:0;align-self:flex-end" onclick="addWebhook()">➕ Ajouter</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title"><span>📊</span> Stats live <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="loadStats()">🔄 Actualiser</button></div>
-        <div class="grid-3">
-          <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value" id="stat-tickets">—</div><div class="stat-label">Tickets ouverts</div></div>
-          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-orders">—</div><div class="stat-label">Commandes actives</div></div>
-          <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value" id="stat-reviews">—</div><div class="stat-label">Avis reçus</div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-vouches">—</div><div class="stat-label">Vouches totaux</div></div>
-          <div class="stat-card"><div class="stat-icon">💱</div><div class="stat-value">Live</div><div class="stat-label">Taux exchange</div></div>
-          <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value" id="stat-payments">—</div><div class="stat-label">Méthodes paiement</div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title"><span>�</span> Envoyer un embed depuis le dashboard</div>
-        <div class="alert alert-info">Envoie n'importe quel embed directement dans un channel Discord depuis ce dashboard. Le bot doit être connecté.</div>
+        <div class="card-title"><span>📤</span> Envoyer un embed via Webhook</div>
         <div class="form-group">
-          <label>Channel Discord</label>
-          <select id="send-channel-select"><option value="">— Charger les channels —</option></select>
-          <button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="loadChannels()">🔄 Charger les channels</button>
+          <label>Webhook destination</label>
+          <select id="wh-select"><option value="">— Sélectionne un webhook —</option></select>
         </div>
         <div class="grid-2">
-          <div class="form-group"><label>Titre</label><input id="quick-embed-title" placeholder="Titre de l'embed" /></div>
-          <div class="form-group"><label>Couleur</label><input id="quick-embed-color" type="color" value="#5865F2" /></div>
+          <div class="form-group"><label>Titre</label><input id="quick-embed-title" placeholder="Titre de l'embed" oninput="updateQuickPreview()" /></div>
+          <div class="form-group"><label>Couleur</label><input id="quick-embed-color" type="color" value="#5865F2" oninput="updateQuickPreview()" /></div>
         </div>
-        <div class="form-group"><label>Description</label><textarea id="quick-embed-desc" rows="4" placeholder="Contenu de l'embed..."></textarea></div>
+        <div class="form-group"><label>Description</label><textarea id="quick-embed-desc" rows="4" placeholder="Contenu de l'embed..." oninput="updateQuickPreview()"></textarea></div>
         <div class="grid-2">
-          <div class="form-group"><label>Footer</label><input id="quick-embed-footer" placeholder="Ohio Paradise" /></div>
-          <div class="form-group"><label>Image URL (optionnel)</label><input id="quick-embed-image" placeholder="https://..." /></div>
+          <div class="form-group"><label>Footer</label><input id="quick-embed-footer" placeholder="Ohio Paradise" oninput="updateQuickPreview()" /></div>
+          <div class="form-group"><label>Image URL (optionnel)</label><input id="quick-embed-image" placeholder="https://..." oninput="updateQuickPreview()" /></div>
         </div>
-        <div class="form-group"><label>Message hors-embed (optionnel)</label><input id="quick-embed-content" placeholder="@everyone — Annonce !" /></div>
-        <div class="flex-row">
-          <button class="btn btn-success" onclick="sendQuickEmbed()">� Envoyer dans Discord</button>
+        <div class="form-group"><label>Thumbnail URL (optionnel)</label><input id="quick-embed-thumb" placeholder="https://..." oninput="updateQuickPreview()" /></div>
+        <div class="form-group"><label>Message hors-embed (optionnel, supporte @everyone)</label><input id="quick-embed-content" placeholder="@everyone — Annonce !" /></div>
+
+        <div class="card-title" style="margin-top:16px;"><span>👁️</span> Prévisualisation</div>
+        <div class="discord-mock">
+          <div class="discord-msg">
+            <div class="discord-avatar">🤖</div>
+            <div class="discord-content">
+              <div class="discord-author">Webhook <span class="bot-tag">BOT</span></div>
+              <div id="quick-embed-preview"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-row" style="margin-top:16px;">
+          <button class="btn btn-success" onclick="sendWebhookEmbed()">🚀 Envoyer dans Discord</button>
           <span id="send-embed-result" style="font-size:13px;color:var(--muted)"></span>
         </div>
       </div>
@@ -1371,81 +1364,102 @@ function saveConfig() {
   alert('✅ Config sauvegardée localement !\nApplique les mêmes valeurs via les commandes /config dans Discord.');
 }
 
-// ============ BOT API ============
-const apiCall = async (method, path, body) => {
-  const url = (localStorage.getItem('ohio_api_url') || '').replace(/\/$/, '');
-  const key = localStorage.getItem('ohio_api_secret') || '';
-  if (!url) throw new Error('URL du bot non configurée');
-  const opts = { method, headers: { 'Content-Type': 'application/json', 'x-api-key': key } };
-  if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(url + path, opts);
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error || r.statusText);
-  return data;
-};
+// ============ WEBHOOKS ============
+function getWebhooks() { return JSON.parse(localStorage.getItem('ohio_webhooks') || '[]'); }
+function saveWebhooks(whs) { localStorage.setItem('ohio_webhooks', JSON.stringify(whs)); }
 
-function saveApiConn() {
-  localStorage.setItem('ohio_api_url', document.getElementById('api-url').value.trim());
-  localStorage.setItem('ohio_api_secret', document.getElementById('api-secret').value.trim());
-  document.getElementById('api-test-result').textContent = '✅ Sauvegardé !';
-}
+function renderWebhooks() {
+  const whs = getWebhooks();
+  const list = document.getElementById('webhooks-list');
+  if (!list) return;
+  list.innerHTML = whs.length ? whs.map((w, i) => `
+    <div class="flex-between" style="background:var(--discord-input);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
+      <div>
+        <div style="font-weight:700;font-size:14px;">${escHtml(w.name)}</div>
+        <div style="font-size:12px;color:var(--muted);font-family:monospace;">${w.url.substring(0, 50)}...</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeWebhook(${i})">🗑️</button>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">Aucun webhook configuré.</div>';
 
-async function testApiConn() {
-  const el = document.getElementById('api-test-result');
-  el.textContent = '⏳ Test en cours...';
-  try {
-    const d = await apiCall('GET', '/api/health');
-    el.style.color = 'var(--success)';
-    el.textContent = `✅ Connecté — ${d.bot}`;
-    document.getElementById('api-status-banner').className = 'alert alert-success';
-    document.getElementById('api-status-banner').textContent = `✅ Bot connecté : ${d.bot}`;
-    loadStats();
-  } catch(e) {
-    el.style.color = 'var(--danger)';
-    el.textContent = `❌ ${e.message}`;
+  const sel = document.getElementById('wh-select');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Sélectionne un webhook —</option>' +
+      whs.map((w, i) => `<option value="${i}">${escHtml(w.name)}</option>`).join('');
   }
 }
 
-async function loadStats() {
-  try {
-    const d = await apiCall('GET', '/api/stats');
-    document.getElementById('stat-tickets').textContent = d.tickets ?? '—';
-    document.getElementById('stat-orders').textContent = d.orders ?? '—';
-    document.getElementById('stat-reviews').textContent = d.reviews ?? '—';
-    document.getElementById('stat-vouches').textContent = d.vouches ?? '—';
-    document.getElementById('stat-payments').textContent = d.paymentMethods ?? '—';
-  } catch {}
+function addWebhook() {
+  const name = document.getElementById('wh-name').value.trim();
+  const url = document.getElementById('wh-url').value.trim();
+  if (!name || !url) return alert('❌ Remplis le nom et l\'URL.');
+  if (!url.startsWith('https://discord.com/api/webhooks/')) return alert('❌ URL webhook invalide.');
+  const whs = getWebhooks();
+  whs.push({ name, url });
+  saveWebhooks(whs);
+  document.getElementById('wh-name').value = '';
+  document.getElementById('wh-url').value = '';
+  renderWebhooks();
 }
 
-async function loadChannels() {
-  try {
-    const channels = await apiCall('GET', '/api/channels');
-    const sel = document.getElementById('send-channel-select');
-    sel.innerHTML = '<option value="">— Sélectionne un channel —</option>' +
-      channels.map(c => `<option value="${c.id}">${c.parentName ? c.parentName + ' / ' : ''}#${c.name}</option>`).join('');
-  } catch(e) {
-    alert('❌ Impossible de charger les channels : ' + e.message);
-  }
+function removeWebhook(i) {
+  const whs = getWebhooks();
+  whs.splice(i, 1);
+  saveWebhooks(whs);
+  renderWebhooks();
 }
 
-async function sendQuickEmbed() {
+function updateQuickPreview() {
+  const title = document.getElementById('quick-embed-title')?.value || '';
+  const desc = document.getElementById('quick-embed-desc')?.value || '';
+  const color = document.getElementById('quick-embed-color')?.value || '#5865F2';
+  const footer = document.getElementById('quick-embed-footer')?.value || '';
+  const image = document.getElementById('quick-embed-image')?.value || '';
+  const thumb = document.getElementById('quick-embed-thumb')?.value || '';
+  const el = document.getElementById('quick-embed-preview');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="embed" style="border-color:${color}">
+      ${thumb ? `<img src="${escHtml(thumb)}" style="float:right;width:60px;height:60px;border-radius:4px;margin-left:12px;" onerror="this.style.display='none'" />` : ''}
+      ${title ? `<div class="embed-title">${escHtml(title)}</div>` : ''}
+      ${desc ? `<div class="embed-desc">${escHtml(desc)}</div>` : ''}
+      ${image ? `<div class="embed-image"><img src="${escHtml(image)}" onerror="this.style.display='none'" /></div>` : ''}
+      ${footer ? `<div class="embed-footer">${escHtml(footer)}</div>` : ''}
+    </div>`;
+}
+
+async function sendWebhookEmbed() {
   const result = document.getElementById('send-embed-result');
-  const channelId = document.getElementById('send-channel-select').value;
-  if (!channelId) return alert('❌ Sélectionne un channel.');
+  const whIdx = document.getElementById('wh-select').value;
+  if (whIdx === '') { result.style.color='var(--danger)'; result.textContent='❌ Sélectionne un webhook.'; return; }
+  const wh = getWebhooks()[parseInt(whIdx)];
+  if (!wh) return;
+
+  const color = document.getElementById('quick-embed-color').value;
+  const colorInt = parseInt(color.replace('#',''), 16);
+  const embed = {};
+  const title = document.getElementById('quick-embed-title').value;
+  const desc = document.getElementById('quick-embed-desc').value;
+  const footer = document.getElementById('quick-embed-footer').value;
+  const image = document.getElementById('quick-embed-image').value;
+  const thumb = document.getElementById('quick-embed-thumb').value;
+  if (title) embed.title = title;
+  if (desc) embed.description = desc;
+  if (footer) embed.footer = { text: footer };
+  if (image) embed.image = { url: image };
+  if (thumb) embed.thumbnail = { url: thumb };
+  embed.color = colorInt;
+  embed.timestamp = new Date().toISOString();
+
+  const content = document.getElementById('quick-embed-content').value || undefined;
   result.textContent = '⏳ Envoi...';
+  result.style.color = 'var(--muted)';
   try {
-    await apiCall('POST', '/api/send-embed', {
-      channelId,
-      embed: {
-        title: document.getElementById('quick-embed-title').value || undefined,
-        description: document.getElementById('quick-embed-desc').value || undefined,
-        color: document.getElementById('quick-embed-color').value,
-        footer: document.getElementById('quick-embed-footer').value || undefined,
-        imageUrl: document.getElementById('quick-embed-image').value || undefined,
-        content: document.getElementById('quick-embed-content').value || undefined,
-        timestamp: true,
-      },
+    const r = await fetch(wh.url + '?wait=true', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, embeds: [embed], username: 'Ohio Paradise' }),
     });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || r.statusText); }
     result.style.color = 'var(--success)';
     result.textContent = '✅ Embed envoyé !';
   } catch(e) {
@@ -1530,12 +1544,8 @@ function loadSaved() {
     if (m.pairDisabledMsg) document.getElementById('exm-disabled').value = m.pairDisabledMsg;
   }
   updateExchangePanelPreview();
-
-  const savedUrl = localStorage.getItem('ohio_api_url');
-  const savedSecret = localStorage.getItem('ohio_api_secret');
-  if (savedUrl) document.getElementById('api-url').value = savedUrl;
-  if (savedSecret) document.getElementById('api-secret').value = savedSecret;
-  if (savedUrl) testApiConn();
+  renderWebhooks();
+  updateQuickPreview();
 }
 
 document.addEventListener('DOMContentLoaded', loadSaved);
