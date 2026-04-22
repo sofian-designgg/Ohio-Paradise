@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "preview.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/preview.html" },
+    { "src": "/preview.html", "dest": "/preview.html" }
+  ]
+}
