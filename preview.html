@@ -386,28 +386,28 @@
 
             <div class="form-group"><label>Message ticket ouvert (éphémère)</label><input id="exm-opened" value="✅ Ton ticket exchange a été créé : {channel}" /></div>
             <div class="form-group"><label>Message déjà un ticket ouvert</label><input id="exm-already" value="❌ Tu as déjà un ticket exchange ouvert : {channel}" /></div>
-            <div class="form-group"><label>Titre de l'embed ticket</label><input id="exm-welcome-title" value="💱 Exchange — {from} → {to}" /></div>
-            <div class="form-group"><label>Description de l'embed ticket</label><textarea id="exm-welcome-desc" rows="4">Bonjour {user} ! 👋
+            <div class="form-group"><label>Titre de l'embed ticket</label><input id="exm-welcome-title" value="💱 Exchange — {from} → {to}" oninput="updateExchangeTicketPreview()" /></div>
+            <div class="form-group"><label>Description de l'embed ticket</label><textarea id="exm-welcome-desc" rows="4" oninput="updateExchangeTicketPreview()">Bonjour {user} ! 👋
 
 Tu souhaites échanger **{amount} {from}** contre **{result} {to}**.
 
 Un staff va confirmer et traiter ton échange sous peu.
 
 > 💡 Assure-toi d'avoir le montant prêt avant d'envoyer.</textarea></div>
-            <div class="form-group"><label>Footer de l'embed ticket</label><input id="exm-welcome-footer" value="Ohio Paradise Exchange • {date}" /></div>
+            <div class="form-group"><label>Footer de l'embed ticket</label><input id="exm-welcome-footer" value="Ohio Paradise Exchange • {date}" oninput="updateExchangeTicketPreview()" /></div>
 
             <div class="separator"></div>
             <div class="grid-2">
-              <div class="form-group"><label>Champ "Tu envoies"</label><input id="exm-yousend" value="📤 Tu envoies" /></div>
-              <div class="form-group"><label>Champ "Tu reçois"</label><input id="exm-youreceive" value="📥 Tu reçois" /></div>
-              <div class="form-group"><label>Champ "Taux"</label><input id="exm-rate" value="📈 Taux appliqué" /></div>
-              <div class="form-group"><label>Champ "Frais"</label><input id="exm-fee" value="💸 Frais ({fee}%)" /></div>
-              <div class="form-group"><label>Champ "Statut"</label><input id="exm-status" value="📊 Statut" /></div>
+              <div class="form-group"><label>Champ "Tu envoies"</label><input id="exm-yousend" value="📤 Tu envoies" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>Champ "Tu reçois"</label><input id="exm-youreceive" value="📥 Tu reçois" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>Champ "Taux"</label><input id="exm-rate" value="📈 Taux appliqué" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>Champ "Frais"</label><input id="exm-fee" value="💸 Frais ({fee}%)" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>Champ "Statut"</label><input id="exm-status" value="📊 Statut" oninput="updateExchangeTicketPreview()" /></div>
             </div>
 
             <div class="separator"></div>
             <div class="grid-2">
-              <div class="form-group"><label>Statut — En attente</label><input id="exm-pending" value="⏳ En attente de confirmation staff" /></div>
+              <div class="form-group"><label>Statut — En attente</label><input id="exm-pending" value="⏳ En attente de confirmation staff" oninput="updateExchangeTicketPreview()" /></div>
               <div class="form-group"><label>Statut — En cours</label><input id="exm-processing" value="🔄 En cours de traitement" /></div>
               <div class="form-group"><label>Statut — Complété</label><input id="exm-completed" value="✅ Exchange complété !" /></div>
               <div class="form-group"><label>Statut — Annulé</label><input id="exm-cancelled" value="❌ Exchange annulé" /></div>
@@ -1379,6 +1379,42 @@ function loadSaved() {
     if (conn.guildId) document.getElementById('guild-id').value = conn.guildId;
   }
   updateTicketPreview();
+
+  const expSaved = JSON.parse(localStorage.getItem('ohio_exchange_panel') || 'null');
+  if (expSaved) {
+    const e = expSaved.embed || {};
+    const m = expSaved.messages || {};
+    if (e.title) document.getElementById('exp-title').value = e.title;
+    if (e.description) document.getElementById('exp-desc').value = e.description;
+    if (e.color) document.getElementById('exp-color').value = e.color;
+    if (e.footer) document.getElementById('exp-footer').value = e.footer;
+    if (e.thumbnailUrl) document.getElementById('exp-thumb').value = e.thumbnailUrl;
+    if (m.ticketOpenedMsg) document.getElementById('exm-opened').value = m.ticketOpenedMsg;
+    if (m.alreadyOpenMsg) document.getElementById('exm-already').value = m.alreadyOpenMsg;
+    if (m.welcomeTitle) document.getElementById('exm-welcome-title').value = m.welcomeTitle;
+    if (m.welcomeDescription) document.getElementById('exm-welcome-desc').value = m.welcomeDescription;
+    if (m.welcomeFooter) document.getElementById('exm-welcome-footer').value = m.welcomeFooter;
+    if (m.youSendFieldName) document.getElementById('exm-yousend').value = m.youSendFieldName;
+    if (m.youReceiveFieldName) document.getElementById('exm-youreceive').value = m.youReceiveFieldName;
+    if (m.rateFieldName) document.getElementById('exm-rate').value = m.rateFieldName;
+    if (m.feeFieldName) document.getElementById('exm-fee').value = m.feeFieldName;
+    if (m.statusFieldName) document.getElementById('exm-status').value = m.statusFieldName;
+    if (m.statusPending) document.getElementById('exm-pending').value = m.statusPending;
+    if (m.statusProcessing) document.getElementById('exm-processing').value = m.statusProcessing;
+    if (m.statusCompleted) document.getElementById('exm-completed').value = m.statusCompleted;
+    if (m.statusCancelled) document.getElementById('exm-cancelled').value = m.statusCancelled;
+    if (m.staffPingMsg) document.getElementById('exm-staffping').value = m.staffPingMsg;
+    if (m.modalTitle) document.getElementById('exm-modal-title').value = m.modalTitle;
+    if (m.modalAmountLabel) document.getElementById('exm-modal-label').value = m.modalAmountLabel;
+    if (m.modalAmountPlaceholder) document.getElementById('exm-modal-placeholder').value = m.modalAmountPlaceholder;
+    if (m.selectFromLabel) document.getElementById('exm-select-from').value = m.selectFromLabel;
+    if (m.selectToLabel) document.getElementById('exm-select-to').value = m.selectToLabel;
+    if (m.invalidAmountMsg) document.getElementById('exm-invalid').value = m.invalidAmountMsg;
+    if (m.belowMinMsg) document.getElementById('exm-belowmin').value = m.belowMinMsg;
+    if (m.aboveMaxMsg) document.getElementById('exm-abovemax').value = m.aboveMaxMsg;
+    if (m.pairDisabledMsg) document.getElementById('exm-disabled').value = m.pairDisabledMsg;
+  }
+  updateExchangePanelPreview();
 }
 
 document.addEventListener('DOMContentLoaded', loadSaved);
