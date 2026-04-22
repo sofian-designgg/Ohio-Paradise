@@ -214,29 +214,61 @@
       <h1>🏠 Dashboard</h1>
       <p class="subtitle">Vue d'ensemble de Ohio Paradise Bot</p>
 
-      <div class="grid-3" style="margin-bottom:20px;">
-        <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value" id="stat-tickets">0</div><div class="stat-label">Tickets ouverts</div></div>
-        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-orders">0</div><div class="stat-label">Commandes actives</div></div>
-        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value" id="stat-reviews">0</div><div class="stat-label">Avis reçus</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-vouches">0</div><div class="stat-label">Vouches totaux</div></div>
-        <div class="stat-card"><div class="stat-icon">💱</div><div class="stat-value">Live</div><div class="stat-label">Taux exchange</div></div>
-        <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value" id="stat-payments">0</div><div class="stat-label">Méthodes paiement</div></div>
-      </div>
-
-      <div class="alert alert-info">💡 Configure d'abord les <strong>Tickets</strong> et les <strong>Paiements</strong>, puis utilise <code>/ticket-panel</code> dans Discord pour déployer le panneau.</div>
-      <div class="alert alert-success">✅ Ce dashboard modifie la configuration MongoDB. Les changements sont appliqués en temps réel sur le bot.</div>
+      <div id="api-status-banner" class="alert alert-info">� Configure la connexion au bot ci-dessous pour activer les fonctions live.</div>
 
       <div class="card">
-        <div class="card-title"><span>🔗</span> Connexion MongoDB</div>
-        <div class="form-group">
-          <label>MONGO_URL (Railway)</label>
-          <input type="password" id="mongo-url" placeholder="mongodb+srv://..." />
+        <div class="card-title"><span>🔗</span> Connexion au Bot (Railway API)</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>URL du bot Railway</label>
+            <input id="api-url" placeholder="https://votre-app.up.railway.app" />
+          </div>
+          <div class="form-group">
+            <label>Clé secrète (DASHBOARD_SECRET)</label>
+            <input type="password" id="api-secret" placeholder="ohio-secret" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>Guild ID Discord</label>
-          <input type="text" id="guild-id" placeholder="123456789012345678" />
+        <div class="flex-row">
+          <button class="btn btn-primary" onclick="saveApiConn()">💾 Sauvegarder</button>
+          <button class="btn btn-secondary" onclick="testApiConn()">🔍 Tester la connexion</button>
+          <span id="api-test-result" style="font-size:13px;color:var(--muted)"></span>
         </div>
-        <button class="btn btn-primary" onclick="saveConnection()">💾 Sauvegarder la connexion</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>📊</span> Stats live <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="loadStats()">🔄 Actualiser</button></div>
+        <div class="grid-3">
+          <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-value" id="stat-tickets">—</div><div class="stat-label">Tickets ouverts</div></div>
+          <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-orders">—</div><div class="stat-label">Commandes actives</div></div>
+          <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value" id="stat-reviews">—</div><div class="stat-label">Avis reçus</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="stat-vouches">—</div><div class="stat-label">Vouches totaux</div></div>
+          <div class="stat-card"><div class="stat-icon">💱</div><div class="stat-value">Live</div><div class="stat-label">Taux exchange</div></div>
+          <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value" id="stat-payments">—</div><div class="stat-label">Méthodes paiement</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>�</span> Envoyer un embed depuis le dashboard</div>
+        <div class="alert alert-info">Envoie n'importe quel embed directement dans un channel Discord depuis ce dashboard. Le bot doit être connecté.</div>
+        <div class="form-group">
+          <label>Channel Discord</label>
+          <select id="send-channel-select"><option value="">— Charger les channels —</option></select>
+          <button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="loadChannels()">🔄 Charger les channels</button>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>Titre</label><input id="quick-embed-title" placeholder="Titre de l'embed" /></div>
+          <div class="form-group"><label>Couleur</label><input id="quick-embed-color" type="color" value="#5865F2" /></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="quick-embed-desc" rows="4" placeholder="Contenu de l'embed..."></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Footer</label><input id="quick-embed-footer" placeholder="Ohio Paradise" /></div>
+          <div class="form-group"><label>Image URL (optionnel)</label><input id="quick-embed-image" placeholder="https://..." /></div>
+        </div>
+        <div class="form-group"><label>Message hors-embed (optionnel)</label><input id="quick-embed-content" placeholder="@everyone — Annonce !" /></div>
+        <div class="flex-row">
+          <button class="btn btn-success" onclick="sendQuickEmbed()">� Envoyer dans Discord</button>
+          <span id="send-embed-result" style="font-size:13px;color:var(--muted)"></span>
+        </div>
       </div>
     </div>
 
@@ -794,7 +826,13 @@ const state = {
   customFees: {},
 };
 
-const ALL_PAIRS = ['LTC_PAYPAL','BTC_PAYPAL','ETH_PAYPAL','LTC_BTC','ETH_LTC','BTC_LTC','LTC_CASHAPP','BTC_CASHAPP'];
+const ALL_PAIRS = [
+  'LTC_PAYPAL','BTC_PAYPAL','ETH_PAYPAL',
+  'PAYPAL_LTC','PAYPAL_BTC','PAYPAL_ETH',
+  'EUR_LTC','EUR_BTC','EUR_ETH',
+  'LTC_BTC','ETH_LTC','BTC_LTC',
+  'LTC_CASHAPP','BTC_CASHAPP',
+];
 
 // ============ NAV ============
 function showPage(name) {
@@ -1333,12 +1371,89 @@ function saveConfig() {
   alert('✅ Config sauvegardée localement !\nApplique les mêmes valeurs via les commandes /config dans Discord.');
 }
 
-function saveConnection() {
-  localStorage.setItem('ohio_conn', JSON.stringify({ mongoUrl: document.getElementById('mongo-url').value, guildId: document.getElementById('guild-id').value }));
-  alert('✅ Connexion sauvegardée localement.');
+// ============ BOT API ============
+const apiCall = async (method, path, body) => {
+  const url = (localStorage.getItem('ohio_api_url') || '').replace(/\/$/, '');
+  const key = localStorage.getItem('ohio_api_secret') || '';
+  if (!url) throw new Error('URL du bot non configurée');
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'x-api-key': key } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+};
+
+function saveApiConn() {
+  localStorage.setItem('ohio_api_url', document.getElementById('api-url').value.trim());
+  localStorage.setItem('ohio_api_secret', document.getElementById('api-secret').value.trim());
+  document.getElementById('api-test-result').textContent = '✅ Sauvegardé !';
 }
 
-// ============ LOAD FROM LOCALSTORAGE ============
+async function testApiConn() {
+  const el = document.getElementById('api-test-result');
+  el.textContent = '⏳ Test en cours...';
+  try {
+    const d = await apiCall('GET', '/api/health');
+    el.style.color = 'var(--success)';
+    el.textContent = `✅ Connecté — ${d.bot}`;
+    document.getElementById('api-status-banner').className = 'alert alert-success';
+    document.getElementById('api-status-banner').textContent = `✅ Bot connecté : ${d.bot}`;
+    loadStats();
+  } catch(e) {
+    el.style.color = 'var(--danger)';
+    el.textContent = `❌ ${e.message}`;
+  }
+}
+
+async function loadStats() {
+  try {
+    const d = await apiCall('GET', '/api/stats');
+    document.getElementById('stat-tickets').textContent = d.tickets ?? '—';
+    document.getElementById('stat-orders').textContent = d.orders ?? '—';
+    document.getElementById('stat-reviews').textContent = d.reviews ?? '—';
+    document.getElementById('stat-vouches').textContent = d.vouches ?? '—';
+    document.getElementById('stat-payments').textContent = d.paymentMethods ?? '—';
+  } catch {}
+}
+
+async function loadChannels() {
+  try {
+    const channels = await apiCall('GET', '/api/channels');
+    const sel = document.getElementById('send-channel-select');
+    sel.innerHTML = '<option value="">— Sélectionne un channel —</option>' +
+      channels.map(c => `<option value="${c.id}">${c.parentName ? c.parentName + ' / ' : ''}#${c.name}</option>`).join('');
+  } catch(e) {
+    alert('❌ Impossible de charger les channels : ' + e.message);
+  }
+}
+
+async function sendQuickEmbed() {
+  const result = document.getElementById('send-embed-result');
+  const channelId = document.getElementById('send-channel-select').value;
+  if (!channelId) return alert('❌ Sélectionne un channel.');
+  result.textContent = '⏳ Envoi...';
+  try {
+    await apiCall('POST', '/api/send-embed', {
+      channelId,
+      embed: {
+        title: document.getElementById('quick-embed-title').value || undefined,
+        description: document.getElementById('quick-embed-desc').value || undefined,
+        color: document.getElementById('quick-embed-color').value,
+        footer: document.getElementById('quick-embed-footer').value || undefined,
+        imageUrl: document.getElementById('quick-embed-image').value || undefined,
+        content: document.getElementById('quick-embed-content').value || undefined,
+        timestamp: true,
+      },
+    });
+    result.style.color = 'var(--success)';
+    result.textContent = '✅ Embed envoyé !';
+  } catch(e) {
+    result.style.color = 'var(--danger)';
+    result.textContent = '❌ ' + e.message;
+  }
+}
+
 function loadSaved() {
   const panel = JSON.parse(localStorage.getItem('ohio_ticket_panel')||'null');
   if (panel) {
@@ -1415,6 +1530,12 @@ function loadSaved() {
     if (m.pairDisabledMsg) document.getElementById('exm-disabled').value = m.pairDisabledMsg;
   }
   updateExchangePanelPreview();
+
+  const savedUrl = localStorage.getItem('ohio_api_url');
+  const savedSecret = localStorage.getItem('ohio_api_secret');
+  if (savedUrl) document.getElementById('api-url').value = savedUrl;
+  if (savedSecret) document.getElementById('api-secret').value = savedSecret;
+  if (savedUrl) testApiConn();
 }
 
 document.addEventListener('DOMContentLoaded', loadSaved);

@@ -35,7 +35,7 @@ const GuildConfigSchema = new Schema({
     feePercent: { type: Number, default: 5 },
     minAmount: { type: Number, default: 5 },
     maxAmount: { type: Number, default: 5000 },
-    activePairs: { type: [String], default: ['LTC_PAYPAL', 'BTC_PAYPAL', 'ETH_PAYPAL', 'LTC_BTC'] },
+    activePairs: { type: [String], default: ['LTC_PAYPAL', 'BTC_PAYPAL', 'ETH_PAYPAL', 'LTC_BTC', 'PAYPAL_LTC', 'PAYPAL_BTC', 'PAYPAL_ETH', 'EUR_LTC', 'EUR_BTC'] },
     customFees: { type: Map, of: Number, default: {} },
   },
 

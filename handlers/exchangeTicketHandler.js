@@ -8,32 +8,51 @@ const GuildConfig = require('../models/GuildConfig');
 const axios = require('axios');
 
 const CRYPTO_IDS = { BTC: 'bitcoin', ETH: 'ethereum', LTC: 'litecoin', XMR: 'monero', USDT: 'tether', SOL: 'solana' };
-const FIAT_LIKE = ['PAYPAL', 'CASHAPP', 'EUR', 'USD', 'LYDIA', 'VIREMENT'];
+const FIAT_SYMBOLS = ['PAYPAL', 'CASHAPP', 'EUR', 'USD', 'LYDIA', 'VIREMENT'];
+const EUR_EQUIV = ['PAYPAL', 'EUR', 'LYDIA', 'VIREMENT'];
+const USD_EQUIV = ['CASHAPP', 'USD'];
 
 const fmt = (txt, vars) => txt.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
+
+const isFiat = (s) => FIAT_SYMBOLS.includes(s);
+const getFiatCurrency = (s) => USD_EQUIV.includes(s) ? 'usd' : 'eur';
+
+const getCryptoPrices = async (ids, vs = 'eur') => {
+  const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=${vs}`);
+  return r.data;
+};
 
 const getRate = async (from, to) => {
   const fromId = CRYPTO_IDS[from];
   const toId = CRYPTO_IDS[to];
   try {
     if (fromId && toId) {
-      const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${fromId},${toId}&vs_currencies=usd`);
-      const fromUSD = r.data[fromId]?.usd || 1;
-      const toUSD = r.data[toId]?.usd || 1;
-      return fromUSD / toUSD;
+      const data = await getCryptoPrices([fromId, toId], 'eur');
+      const fromEUR = data[fromId]?.eur || 1;
+      const toEUR = data[toId]?.eur || 1;
+      return fromEUR / toEUR;
     }
     if (fromId && !toId) {
-      const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${fromId}&vs_currencies=usd`);
-      return r.data[fromId]?.usd || 1;
+      const vs = getFiatCurrency(to);
+      const data = await getCryptoPrices([fromId], vs);
+      return data[fromId]?.[vs] || 1;
     }
     if (!fromId && toId) {
-      const r = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${toId}&vs_currencies=usd`);
-      return 1 / (r.data[toId]?.usd || 1);
+      const vs = getFiatCurrency(from);
+      const data = await getCryptoPrices([toId], vs);
+      const cryptoPriceInFiat = data[toId]?.[vs] || 1;
+      return 1 / cryptoPriceInFiat;
     }
     return 1;
   } catch {
     return 1;
   }
+};
+
+const formatAmount = (num) => {
+  if (num === undefined || num === null || isNaN(num)) return '0';
+  if (num >= 0.01) return parseFloat(num.toFixed(2)).toString();
+  return parseFloat(num.toFixed(8)).toString();
 };
 
 const getNextTicketNumber = async (guildId) => {
@@ -124,8 +143,9 @@ const handleSelectTo = async (interaction) => {
     .setCustomId(`exc_ticket_amount_${pair}`)
     .setTitle((msgs.modalTitle || '💱 Montant à échanger').substring(0, 45));
 
-  const amountLabel = fmt(msgs.modalAmountLabel || 'Combien de {from} envoies-tu ?', { from }).substring(0, 45);
-  const amountPlaceholder = fmt(msgs.modalAmountPlaceholder || 'ex: 0.5', { from }).substring(0, 100);
+  const unit = isFiat(from) ? getFiatCurrency(from).toUpperCase() : from;
+  const amountLabel = fmt(msgs.modalAmountLabel || 'Combien de {from} envoies-tu ?', { from: unit }).substring(0, 45);
+  const amountPlaceholder = fmt(msgs.modalAmountPlaceholder || 'ex: 50', { from: unit }).substring(0, 100);
 
   const amountInput = new TextInputBuilder()
     .setCustomId('exc_amount')
@@ -170,6 +190,9 @@ const handleAmountSubmit = async (interaction, pair) => {
   const feeAmt = rawResult * (fee / 100);
   const finalResult = rawResult - feeAmt;
 
+  const fromUnit = isFiat(from) ? getFiatCurrency(from).toUpperCase() : from;
+  const toUnit = isFiat(to) ? getFiatCurrency(to).toUpperCase() : to;
+
   const ticketNumber = await getNextTicketNumber(interaction.guildId);
   const channelName = `exc-${String(ticketNumber).padStart(4, '0')}`;
   const guild = interaction.guild;
@@ -192,7 +215,7 @@ const handleAmountSubmit = async (interaction, pair) => {
     userId: interaction.user.id,
     category: 'exchange',
     ticketNumber,
-    notes: [{ content: JSON.stringify({ from, to, amount, rate, fee, finalResult }), addedBy: 'system', addedAt: new Date() }],
+    notes: [{ content: JSON.stringify({ from, to, fromUnit, toUnit, amount, rate, fee, finalResult }), addedBy: 'system', addedAt: new Date() }],
   });
   await ticket.save();
 
@@ -200,24 +223,28 @@ const handleAmountSubmit = async (interaction, pair) => {
   const color = config.exchangeTicketPanel?.embed?.color || '#F1C40F';
   const colorInt = parseInt(color.replace('#', ''), 16) || 0xF1C40F;
 
-  const title = fmt(msgs.welcomeTitle || '💱 Exchange — {from} → {to}', { from, to });
+  const title = fmt(msgs.welcomeTitle || '💱 Exchange — {from} → {to}', { from: fromUnit, to: toUnit });
   const description = fmt(msgs.welcomeDescription || 'Bonjour {user} !\n\nTu souhaites échanger **{amount} {from}** contre **{result} {to}**.', {
     user: `<@${interaction.user.id}>`,
-    from, to,
-    amount: amount.toFixed(6).replace(/\.?0+$/, ''),
-    result: finalResult.toFixed(6).replace(/\.?0+$/, ''),
+    from: fromUnit, to: toUnit,
+    amount: formatAmount(amount),
+    result: formatAmount(finalResult),
   });
   const footer = fmt(msgs.welcomeFooter || 'Ohio Paradise Exchange • {date}', { date: now });
+
+  const rateDisplay = isFiat(from)
+    ? `1 ${toUnit} = ${formatAmount(1 / rate)} ${fromUnit}`
+    : `1 ${fromUnit} = ${formatAmount(rate)} ${toUnit}`;
 
   const embed = new EmbedBuilder()
     .setTitle(title)
     .setDescription(description)
     .setColor(colorInt)
     .addFields(
-      { name: msgs.youSendFieldName || '📤 Tu envoies', value: `**${amount.toFixed(6).replace(/\.?0+$/, '')} ${from}**`, inline: true },
-      { name: msgs.youReceiveFieldName || '📥 Tu reçois', value: `**${finalResult.toFixed(6).replace(/\.?0+$/, '')} ${to}**`, inline: true },
-      { name: msgs.rateFieldName || '📈 Taux appliqué', value: `1 ${from} = ${rate.toFixed(6).replace(/\.?0+$/, '')} ${to}`, inline: true },
-      { name: fmt(msgs.feeFieldName || '💸 Frais ({fee}%)', { fee }), value: `${feeAmt.toFixed(6).replace(/\.?0+$/, '')} ${to}`, inline: true },
+      { name: msgs.youSendFieldName || '📤 Tu envoies', value: `**${formatAmount(amount)} ${fromUnit}**`, inline: true },
+      { name: msgs.youReceiveFieldName || '📥 Tu reçois', value: `**${formatAmount(finalResult)} ${toUnit}**`, inline: true },
+      { name: msgs.rateFieldName || '📈 Taux appliqué', value: rateDisplay, inline: true },
+      { name: fmt(msgs.feeFieldName || '💸 Frais ({fee}%)', { fee }), value: `${formatAmount(feeAmt)} ${toUnit}`, inline: true },
       { name: msgs.statusFieldName || '📊 Statut', value: msgs.statusPending || '⏳ En attente de confirmation staff', inline: false },
     )
     .setFooter({ text: footer })
