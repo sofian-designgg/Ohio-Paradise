@@ -80,7 +80,12 @@ const startApiServer = () => {
   const API_SECRET = process.env.DASHBOARD_SECRET || 'ohio-secret';
   const PORT = process.env.PORT || 3000;
 
-  app.use(cors());
+  app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-api-key'],
+  }));
+  app.options('*', cors());
   app.use(express.json());
 
   const auth = (req, res, next) => {
