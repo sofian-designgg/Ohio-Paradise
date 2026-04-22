@@ -12,6 +12,7 @@ module.exports = {
         .addChoices(
           { name: '🎫 Panneau Tickets', value: 'ticket_panel' },
           { name: '💱 Exchange', value: 'exchange' },
+          { name: '🎫 Panneau Exchange Ticket', value: 'exchange_panel' },
           { name: '💳 Méthode de paiement', value: 'payment_method' },
           { name: '✅ Paliers Vouches', value: 'vouch_roles' },
           { name: '⚙️ Config générale', value: 'general' },
@@ -47,6 +48,16 @@ module.exports = {
         { name: 'Titre', value: parsed.embed?.title || '—', inline: true },
         { name: 'Couleur', value: parsed.embed?.color || '—', inline: true },
         { name: 'Boutons', value: `${parsed.buttons?.length || 0} bouton(s)`, inline: true },
+      );
+    }
+
+    else if (type === 'exchange_panel') {
+      if (parsed.embed) config.exchangeTicketPanel.embed = { ...config.exchangeTicketPanel.embed, ...parsed.embed };
+      if (parsed.messages) config.exchangeMessages = { ...config.exchangeMessages?.toObject?.() || {}, ...parsed.messages };
+      fields.push(
+        { name: 'Titre panneau', value: parsed.embed?.title || '—', inline: true },
+        { name: 'Couleur', value: parsed.embed?.color || '—', inline: true },
+        { name: 'Messages', value: `${Object.keys(parsed.messages || {}).length} message(s)`, inline: true },
       );
     }
 
@@ -95,6 +106,8 @@ module.exports = {
 
     config.markModified('ticketPanel');
     config.markModified('exchangeConfig');
+    config.markModified('exchangeTicketPanel');
+    config.markModified('exchangeMessages');
     config.markModified('paymentMethods');
     config.markModified('vouchRoles');
     await config.save();
@@ -102,6 +115,7 @@ module.exports = {
     const typeLabels = {
       ticket_panel: '🎫 Panneau Tickets',
       exchange: '💱 Exchange',
+      exchange_panel: '🎫 Panneau Exchange Ticket',
       payment_method: '💳 Méthode de paiement',
       vouch_roles: '✅ Paliers Vouches',
       general: '⚙️ Config générale',

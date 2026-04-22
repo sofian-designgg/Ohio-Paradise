@@ -367,9 +367,114 @@
         <div id="sim-result" class="discord-mock" style="min-height:60px;"></div>
       </div>
 
-      <button class="btn btn-warning" style="margin-bottom:20px" onclick="generateCmd('exchange')">📋 Générer la commande Discord</button>
+      <div class="separator"></div>
+      <h2 style="margin-bottom:16px;">🎫 Panneau Exchange (Ticket)</h2>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title"><span>🖼️</span> Embed du panneau</div>
+            <div class="form-group"><label>Titre</label><input id="exp-title" value="💱 Exchange — Ohio Paradise" oninput="updateExchangePanelPreview()" /></div>
+            <div class="form-group"><label>Description</label><textarea id="exp-desc" rows="3" oninput="updateExchangePanelPreview()">Sélectionne la crypto que tu envoies et celle que tu reçois pour ouvrir un ticket d'exchange.</textarea></div>
+            <div class="form-group"><label>Couleur</label><input id="exp-color" type="color" value="#F1C40F" oninput="updateExchangePanelPreview()" /></div>
+            <div class="form-group"><label>Footer</label><input id="exp-footer" value="Ohio Paradise Exchange" oninput="updateExchangePanelPreview()" /></div>
+            <div class="form-group"><label>Thumbnail URL</label><input id="exp-thumb" placeholder="https://..." oninput="updateExchangePanelPreview()" /></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>💬</span> Messages du ticket (customisables)</div>
+            <div class="alert alert-info">Variables disponibles : <code>{user}</code> <code>{from}</code> <code>{to}</code> <code>{amount}</code> <code>{result}</code> <code>{fee}</code> <code>{channel}</code> <code>{date}</code> <code>{staff}</code> <code>{min}</code> <code>{max}</code></div>
+
+            <div class="form-group"><label>Message ticket ouvert (éphémère)</label><input id="exm-opened" value="✅ Ton ticket exchange a été créé : {channel}" /></div>
+            <div class="form-group"><label>Message déjà un ticket ouvert</label><input id="exm-already" value="❌ Tu as déjà un ticket exchange ouvert : {channel}" /></div>
+            <div class="form-group"><label>Titre de l'embed ticket</label><input id="exm-welcome-title" value="💱 Exchange — {from} → {to}" /></div>
+            <div class="form-group"><label>Description de l'embed ticket</label><textarea id="exm-welcome-desc" rows="4">Bonjour {user} ! 👋
+
+Tu souhaites échanger **{amount} {from}** contre **{result} {to}**.
+
+Un staff va confirmer et traiter ton échange sous peu.
+
+> 💡 Assure-toi d'avoir le montant prêt avant d'envoyer.</textarea></div>
+            <div class="form-group"><label>Footer de l'embed ticket</label><input id="exm-welcome-footer" value="Ohio Paradise Exchange • {date}" /></div>
+
+            <div class="separator"></div>
+            <div class="grid-2">
+              <div class="form-group"><label>Champ "Tu envoies"</label><input id="exm-yousend" value="📤 Tu envoies" /></div>
+              <div class="form-group"><label>Champ "Tu reçois"</label><input id="exm-youreceive" value="📥 Tu reçois" /></div>
+              <div class="form-group"><label>Champ "Taux"</label><input id="exm-rate" value="📈 Taux appliqué" /></div>
+              <div class="form-group"><label>Champ "Frais"</label><input id="exm-fee" value="💸 Frais ({fee}%)" /></div>
+              <div class="form-group"><label>Champ "Statut"</label><input id="exm-status" value="📊 Statut" /></div>
+            </div>
+
+            <div class="separator"></div>
+            <div class="grid-2">
+              <div class="form-group"><label>Statut — En attente</label><input id="exm-pending" value="⏳ En attente de confirmation staff" /></div>
+              <div class="form-group"><label>Statut — En cours</label><input id="exm-processing" value="🔄 En cours de traitement" /></div>
+              <div class="form-group"><label>Statut — Complété</label><input id="exm-completed" value="✅ Exchange complété !" /></div>
+              <div class="form-group"><label>Statut — Annulé</label><input id="exm-cancelled" value="❌ Exchange annulé" /></div>
+            </div>
+
+            <div class="separator"></div>
+            <div class="form-group"><label>Ping staff (dans le ticket)</label><input id="exm-staffping" value="📢 {staff} — Nouvel exchange à traiter !" /></div>
+            <div class="form-group"><label>Titre modal (demande de montant)</label><input id="exm-modal-title" value="💱 Montant à échanger" /></div>
+            <div class="form-group"><label>Label input montant</label><input id="exm-modal-label" value="Combien de {from} envoies-tu ?" /></div>
+            <div class="form-group"><label>Placeholder input montant</label><input id="exm-modal-placeholder" value="ex: 0.5" /></div>
+            <div class="form-group"><label>Select "Tu envoies" placeholder</label><input id="exm-select-from" value="📤 Que veux-tu envoyer ?" /></div>
+            <div class="form-group"><label>Select "Tu reçois" placeholder</label><input id="exm-select-to" value="📥 Que veux-tu recevoir ?" /></div>
+
+            <div class="separator"></div>
+            <div class="form-group"><label>Erreur — Montant invalide</label><input id="exm-invalid" value="❌ Montant invalide. Entrez un nombre valide." /></div>
+            <div class="form-group"><label>Erreur — En dessous du minimum</label><input id="exm-belowmin" value="❌ Montant minimum : {min} {from}" /></div>
+            <div class="form-group"><label>Erreur — Au dessus du maximum</label><input id="exm-abovemax" value="❌ Montant maximum : {max} {from}" /></div>
+            <div class="form-group"><label>Erreur — Paire désactivée</label><input id="exm-disabled" value="❌ Cette paire d'échange n'est pas disponible." /></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title"><span>👁️</span> Prévisualisation panneau</div>
+            <div class="discord-mock">
+              <div class="discord-msg">
+                <div class="discord-avatar">🤖</div>
+                <div class="discord-content">
+                  <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+                  <div id="exp-preview-embed"></div>
+                  <div class="discord-buttons">
+                    <button class="d-btn primary" style="background:#5865F2">💱 Ouvrir un Exchange</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <div class="card-title"><span>👁️</span> Prévisualisation ticket</div>
+            <div class="discord-mock">
+              <div class="discord-msg">
+                <div class="discord-avatar">🤖</div>
+                <div class="discord-content">
+                  <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
+                  <div id="exp-ticket-preview"></div>
+                  <div class="discord-buttons">
+                    <button class="d-btn success" style="background:#2d7d46">✋ Claim</button>
+                    <button class="d-btn primary" style="background:#5865F2">✅ Complété</button>
+                    <button class="d-btn secondary" style="background:#4e5058">🚫 Annuler</button>
+                    <button class="d-btn danger" style="background:#c62828">🔒 Fermer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-row" style="gap:12px;margin-bottom:20px;">
+        <button class="btn btn-success" onclick="saveExchangePanel()">💾 Sauvegarder</button>
+        <button class="btn btn-warning" onclick="generateCmd('exchange_panel')">📋 Générer la commande Discord</button>
+        <button class="btn btn-warning" onclick="generateCmd('exchange')">📋 Générer config exchange</button>
+      </div>
+
       <div class="card">
         <div class="card-title"><span>📋</span> Commandes correspondantes</div>
+        <div class="cmd-ref"><div><div class="cmd-name">/exchange-panel #channel</div><div class="cmd-desc">Déploie le panneau exchange interactif</div></div><button class="copy-btn" data-copy="/exchange-panel channel:#exchange">Copier</button></div>
         <div class="cmd-ref"><div><div class="cmd-name">/exchange-calc [from] [to] [montant]</div><div class="cmd-desc">Calcule un échange avec frais et taux en temps réel</div></div><button class="copy-btn" data-copy="/exchange-calc from:LTC to:PAYPAL amount:50">Copier</button></div>
         <div class="cmd-ref"><div><div class="cmd-name">/exchange-rates</div><div class="cmd-desc">Affiche tous les taux actuels</div></div><button class="copy-btn" data-copy="/exchange-rates">Copier</button></div>
       </div>
@@ -699,7 +804,7 @@ function showPage(name) {
   event.currentTarget.classList.add('active');
   if (name === 'tickets') updateTicketPreview();
   if (name === 'embed') { updateEmbedPreview(); renderEmbedTemplates(); }
-  if (name === 'exchange') { renderPairs(); renderCustomFees(); simulate(); }
+  if (name === 'exchange') { renderPairs(); renderCustomFees(); updateExchangePanelPreview(); simulate(); }
   if (name === 'payment') renderPayments();
   if (name === 'vouches') renderVouchRoles();
   if (name === 'commands') renderAllCommands();
@@ -811,6 +916,9 @@ function generateCmd(type) {
   } else if (type === 'payment_method') {
     if (!state.paymentMethods.length) return alert('❌ Aucune méthode de paiement configurée.');
     data = state.paymentMethods;
+  } else if (type === 'exchange_panel') {
+    saveExchangePanel();
+    data = JSON.parse(localStorage.getItem('ohio_exchange_panel') || '{}');
   } else if (type === 'vouch_roles') {
     data = state.vouchRoles;
   } else if (type === 'general') {
@@ -829,6 +937,7 @@ function generateCmd(type) {
   document.getElementById('gen-cmd-type').textContent = {
     ticket_panel: '🎫 Panneau Tickets',
     exchange: '💱 Exchange',
+    exchange_panel: '🎫 Panneau Exchange Ticket',
     payment_method: '💳 Méthodes de paiement',
     vouch_roles: '✅ Paliers Vouches',
     general: '⚙️ Config générale',
@@ -843,6 +952,90 @@ function copyGenCmd() {
     btn.textContent = '✅ Copié !';
     setTimeout(() => btn.textContent = '📋 Copier la commande', 2000);
   });
+}
+
+// ============ EXCHANGE PANEL ============
+function updateExchangePanelPreview() {
+  const title = document.getElementById('exp-title')?.value || '💱 Exchange — Ohio Paradise';
+  const desc = document.getElementById('exp-desc')?.value || '';
+  const color = document.getElementById('exp-color')?.value || '#F1C40F';
+  const footer = document.getElementById('exp-footer')?.value || 'Ohio Paradise Exchange';
+  document.getElementById('exp-preview-embed').innerHTML = `
+    <div class="embed" style="border-color:${color}">
+      <div class="embed-title">${escHtml(title)}</div>
+      <div class="embed-desc">${escHtml(desc)}</div>
+      <div class="embed-footer">${escHtml(footer)}</div>
+    </div>`;
+  updateExchangeTicketPreview();
+}
+
+function updateExchangeTicketPreview() {
+  const welcomeTitle = document.getElementById('exm-welcome-title')?.value || '💱 Exchange — {from} → {to}';
+  const welcomeDesc = document.getElementById('exm-welcome-desc')?.value || '';
+  const welcomeFooter = document.getElementById('exm-welcome-footer')?.value || 'Ohio Paradise Exchange • {date}';
+  const yousend = document.getElementById('exm-yousend')?.value || '📤 Tu envoies';
+  const youreceive = document.getElementById('exm-youreceive')?.value || '📥 Tu reçois';
+  const rate = document.getElementById('exm-rate')?.value || '📈 Taux appliqué';
+  const feeField = document.getElementById('exm-fee')?.value || '💸 Frais ({fee}%)';
+  const status = document.getElementById('exm-status')?.value || '📊 Statut';
+  const pending = document.getElementById('exm-pending')?.value || '⏳ En attente de confirmation staff';
+  const color = document.getElementById('exp-color')?.value || '#F1C40F';
+
+  const fmtPrev = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? `{${k}}`);
+  const vars = { from:'LTC', to:'PAYPAL', amount:'0.5', result:'42.50', fee:'5', user:'@toi', date:'22/04/2025 11:00', staff:'@Staff', min:'5', max:'5000' };
+
+  document.getElementById('exp-ticket-preview').innerHTML = `
+    <div class="embed" style="border-color:${color}">
+      <div class="embed-title">${escHtml(fmtPrev(welcomeTitle, vars))}</div>
+      <div class="embed-desc">${escHtml(fmtPrev(welcomeDesc, vars))}</div>
+      <div class="embed-fields inline">
+        <div class="embed-field"><div class="embed-field-name">${escHtml(yousend)}</div><div class="embed-field-value">0.5 LTC</div></div>
+        <div class="embed-field"><div class="embed-field-name">${escHtml(youreceive)}</div><div class="embed-field-value">42.50 PAYPAL</div></div>
+        <div class="embed-field"><div class="embed-field-name">${escHtml(rate)}</div><div class="embed-field-value">1 LTC = 89.47 PAYPAL</div></div>
+        <div class="embed-field"><div class="embed-field-name">${escHtml(fmtPrev(feeField, {fee:'5'}))}</div><div class="embed-field-value">2.50 PAYPAL</div></div>
+        <div class="embed-field" style="flex:100%"><div class="embed-field-name">${escHtml(status)}</div><div class="embed-field-value">${escHtml(pending)}</div></div>
+      </div>
+      <div class="embed-footer">${escHtml(fmtPrev(welcomeFooter, vars))}</div>
+    </div>`;
+}
+
+function saveExchangePanel() {
+  const panel = {
+    embed: {
+      title: document.getElementById('exp-title').value,
+      description: document.getElementById('exp-desc').value,
+      color: document.getElementById('exp-color').value,
+      footer: document.getElementById('exp-footer').value,
+      thumbnailUrl: document.getElementById('exp-thumb').value || null,
+    },
+    messages: {
+      ticketOpenedMsg: document.getElementById('exm-opened').value,
+      alreadyOpenMsg: document.getElementById('exm-already').value,
+      welcomeTitle: document.getElementById('exm-welcome-title').value,
+      welcomeDescription: document.getElementById('exm-welcome-desc').value,
+      welcomeFooter: document.getElementById('exm-welcome-footer').value,
+      youSendFieldName: document.getElementById('exm-yousend').value,
+      youReceiveFieldName: document.getElementById('exm-youreceive').value,
+      rateFieldName: document.getElementById('exm-rate').value,
+      feeFieldName: document.getElementById('exm-fee').value,
+      statusFieldName: document.getElementById('exm-status').value,
+      statusPending: document.getElementById('exm-pending').value,
+      statusProcessing: document.getElementById('exm-processing').value,
+      statusCompleted: document.getElementById('exm-completed').value,
+      statusCancelled: document.getElementById('exm-cancelled').value,
+      staffPingMsg: document.getElementById('exm-staffping').value,
+      modalTitle: document.getElementById('exm-modal-title').value,
+      modalAmountLabel: document.getElementById('exm-modal-label').value,
+      modalAmountPlaceholder: document.getElementById('exm-modal-placeholder').value,
+      selectFromLabel: document.getElementById('exm-select-from').value,
+      selectToLabel: document.getElementById('exm-select-to').value,
+      invalidAmountMsg: document.getElementById('exm-invalid').value,
+      belowMinMsg: document.getElementById('exm-belowmin').value,
+      aboveMaxMsg: document.getElementById('exm-abovemax').value,
+      pairDisabledMsg: document.getElementById('exm-disabled').value,
+    },
+  };
+  localStorage.setItem('ohio_exchange_panel', JSON.stringify(panel));
 }
 
 // ============ EXCHANGE ============

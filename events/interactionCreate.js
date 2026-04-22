@@ -1,5 +1,6 @@
 const { EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 const { handleTicketOpen, handleTicketClaim, handleTicketCloseConfirm, handleTicketCloseDirect } = require('../handlers/ticketHandler');
+const { handleExchangePanelOpen, handleSelectFrom, handleSelectTo, handleAmountSubmit, handleExchangeDone, handleExchangeCancel } = require('../handlers/exchangeTicketHandler');
 const GuildConfig = require('../models/GuildConfig');
 
 module.exports = {
@@ -100,9 +101,32 @@ module.exports = {
         client._pendingEmbeds?.delete(interaction.user.id);
         return interaction.update({ content: '❌ Annulé.', embeds: [], components: [] });
       }
+
+      if (id === 'exc_panel_open') return handleExchangePanelOpen(interaction);
+
+      if (id.startsWith('exc_ticket_done_')) {
+        const ticketId = id.replace('exc_ticket_done_', '');
+        return handleExchangeDone(interaction, ticketId);
+      }
+
+      if (id.startsWith('exc_ticket_cancel_')) {
+        const ticketId = id.replace('exc_ticket_cancel_', '');
+        return handleExchangeCancel(interaction, ticketId);
+      }
+    }
+
+    if (interaction.isStringSelectMenu()) {
+      const id = interaction.customId;
+      if (id === 'exc_ticket_from') return handleSelectFrom(interaction);
+      if (id === 'exc_ticket_to') return handleSelectTo(interaction);
     }
 
     if (interaction.isModalSubmit()) {
+      if (interaction.customId.startsWith('exc_ticket_amount_')) {
+        const pair = interaction.customId.replace('exc_ticket_amount_', '');
+        return handleAmountSubmit(interaction, pair);
+      }
+
       if (interaction.customId === 'embed_save_template_modal') {
         await interaction.deferReply({ ephemeral: true });
 
