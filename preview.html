@@ -261,7 +261,10 @@
           <div class="form-group"><label>Catégorie Tickets (ID)</label><input id="cfg-cat" placeholder="ID de la catégorie" /></div>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="saveConfig()">💾 Sauvegarder</button>
+      <div class="flex-row" style="gap:12px;">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Sauvegarder</button>
+        <button class="btn btn-warning" onclick="generateCmd('general')">📋 Générer la commande Discord</button>
+      </div>
       <div class="separator"></div>
       <div class="card">
         <div class="card-title"><span>📋</span> Commandes correspondantes</div>
@@ -314,7 +317,10 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-success" onclick="saveTicketPanel()">💾 Sauvegarder & Appliquer</button>
+      <div class="flex-row" style="gap:12px;margin-top:0;">
+        <button class="btn btn-success" onclick="saveTicketPanel()">💾 Sauvegarder</button>
+        <button class="btn btn-warning" onclick="generateCmd('ticket_panel')">📋 Générer la commande Discord</button>
+      </div>
     </div>
 
     <!-- EXCHANGE -->
@@ -361,6 +367,7 @@
         <div id="sim-result" class="discord-mock" style="min-height:60px;"></div>
       </div>
 
+      <button class="btn btn-warning" style="margin-bottom:20px" onclick="generateCmd('exchange')">📋 Générer la commande Discord</button>
       <div class="card">
         <div class="card-title"><span>📋</span> Commandes correspondantes</div>
         <div class="cmd-ref"><div><div class="cmd-name">/exchange-calc [from] [to] [montant]</div><div class="cmd-desc">Calcule un échange avec frais et taux en temps réel</div></div><button class="copy-btn" data-copy="/exchange-calc from:LTC to:PAYPAL amount:50">Copier</button></div>
@@ -372,7 +379,10 @@
     <div class="page" id="page-payment">
       <h1>💳 Fiches de Paiement</h1>
       <p class="subtitle">Configure tes méthodes de paiement (PayPal, Crypto, etc.)</p>
-      <button class="btn btn-primary" style="margin-bottom:20px" onclick="openAddPayment()">+ Nouvelle méthode</button>
+      <div class="flex-row" style="margin-bottom:20px;gap:12px;">
+        <button class="btn btn-primary" onclick="openAddPayment()">+ Nouvelle méthode</button>
+        <button class="btn btn-warning" onclick="generateCmd('payment_method')">📋 Générer la commande Discord</button>
+      </div>
       <div class="grid-2" id="payment-list"></div>
       <div class="separator"></div>
       <div class="card">
@@ -521,6 +531,7 @@
         <div id="vouch-roles-list"></div>
         <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="addVouchRole()">+ Ajouter un palier</button>
         <button class="btn btn-primary" style="margin-top:12px;margin-left:8px" onclick="saveVouchRoles()">💾 Sauvegarder</button>
+        <button class="btn btn-warning" style="margin-top:12px;margin-left:8px" onclick="generateCmd('vouch_roles')">📋 Générer la commande Discord</button>
       </div>
       <div class="discord-mock" style="margin-bottom:20px;">
         <div class="discord-msg">
@@ -595,6 +606,24 @@ Ouvre un ticket pour commander !</div>
     </div>
 
   </main>
+</div>
+
+<!-- MODAL GENERATE COMMAND -->
+<div class="modal-overlay" id="modal-gencmd">
+  <div class="modal" style="width:620px;">
+    <h3>📋 Commande à coller dans Discord — <span id="gen-cmd-type"></span></h3>
+    <div class="alert alert-info" style="margin-bottom:14px;">
+      Copie cette commande et colle-la dans ton serveur Discord. Le bot appliquera la configuration en base de données.
+    </div>
+    <div class="form-group">
+      <label>Commande générée</label>
+      <textarea id="gen-cmd-output" rows="5" style="font-family:monospace;font-size:12px;word-break:break-all;" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gencmd')">Fermer</button>
+      <button class="btn btn-primary" onclick="copyGenCmd()">📋 Copier la commande</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL ADD BUTTON -->
@@ -755,7 +784,65 @@ function saveTicketPanel() {
     buttons: state.ticketButtons,
   };
   localStorage.setItem('ohio_ticket_panel', JSON.stringify(panel));
-  alert('✅ Configuration du panneau sauvegardée en local !\nUtilise /ticket-panel #channel dans Discord pour déployer.');
+}
+
+function generateCmd(type) {
+  let data;
+  if (type === 'ticket_panel') {
+    data = {
+      embed: {
+        title: document.getElementById('tp-title').value,
+        description: document.getElementById('tp-desc').value,
+        color: document.getElementById('tp-color').value,
+        footer: document.getElementById('tp-footer').value,
+        thumbnailUrl: document.getElementById('tp-thumb').value || null,
+      },
+      buttons: state.ticketButtons,
+    };
+    saveTicketPanel();
+  } else if (type === 'exchange') {
+    data = {
+      feePercent: parseFloat(document.getElementById('exc-fee').value) || 5,
+      minAmount: parseFloat(document.getElementById('exc-min').value) || 5,
+      maxAmount: parseFloat(document.getElementById('exc-max').value) || 5000,
+      activePairs: state.activePairs,
+      customFees: state.customFees,
+    };
+  } else if (type === 'payment_method') {
+    if (!state.paymentMethods.length) return alert('❌ Aucune méthode de paiement configurée.');
+    data = state.paymentMethods;
+  } else if (type === 'vouch_roles') {
+    data = state.vouchRoles;
+  } else if (type === 'general') {
+    data = {
+      logChannelId: document.getElementById('cfg-log').value || null,
+      staffRoleId: document.getElementById('cfg-staff').value || null,
+      ticketCategoryId: document.getElementById('cfg-cat').value || null,
+      reviewChannelId: document.getElementById('cfg-review').value || null,
+      vouchChannelId: document.getElementById('cfg-vouch').value || null,
+      announcementChannelId: document.getElementById('cfg-announce').value || null,
+    };
+  }
+  const json = JSON.stringify(data);
+  const cmd = `/config-import type:${type} data:${json}`;
+  document.getElementById('gen-cmd-output').value = cmd;
+  document.getElementById('gen-cmd-type').textContent = {
+    ticket_panel: '🎫 Panneau Tickets',
+    exchange: '💱 Exchange',
+    payment_method: '💳 Méthodes de paiement',
+    vouch_roles: '✅ Paliers Vouches',
+    general: '⚙️ Config générale',
+  }[type] || type;
+  openModal('modal-gencmd');
+}
+
+function copyGenCmd() {
+  const ta = document.getElementById('gen-cmd-output');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = '✅ Copié !';
+    setTimeout(() => btn.textContent = '📋 Copier la commande', 2000);
+  });
 }
 
 // ============ EXCHANGE ============
@@ -795,7 +882,6 @@ function saveExchange() {
   state.excMin = parseFloat(document.getElementById('exc-min').value)||5;
   state.excMax = parseFloat(document.getElementById('exc-max').value)||5000;
   localStorage.setItem('ohio_exchange', JSON.stringify({ feePercent: state.excFee, minAmount: state.excMin, maxAmount: state.excMax, activePairs: state.activePairs, customFees: state.customFees }));
-  alert('✅ Config exchange sauvegardée !');
   renderCustomFees();
 }
 
