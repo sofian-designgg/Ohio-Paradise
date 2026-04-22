@@ -71,10 +71,6 @@ if (fs.existsSync(eventsPath)) {
   }
 }
 
-mongoose.connect(process.env.MONGO_URL)
-  .then(() => console.log('[MongoDB] Connected'))
-  .catch(err => console.error('[MongoDB] Connection error:', err));
-
 const startApiServer = () => {
   const app = express();
   const API_SECRET = process.env.DASHBOARD_SECRET || 'ohio-secret';
@@ -170,7 +166,13 @@ const startApiServer = () => {
 };
 
 deployCommands(commandsJSON).then(() => {
-  client.login(process.env.DISCORD_TOKEN).then(() => {
-    startApiServer();
-  });
+  mongoose.connect(process.env.MONGO_URL)
+    .then(() => {
+      console.log('[MongoDB] Connected');
+      return client.login(process.env.DISCORD_TOKEN);
+    })
+    .then(() => {
+      startApiServer();
+    })
+    .catch(err => console.error('[MongoDB] Connection error:', err));
 });
