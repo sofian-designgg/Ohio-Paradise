@@ -8,10 +8,14 @@ module.exports = {
     console.log(`[Ready] Logged in as ${client.user.tag}`);
     client.user.setPresence({ activities: [{ name: 'Ohio Paradise 🛍️' }], status: 'online' });
 
-    const announcements = await Announcement.find({ active: true, cronExpression: { $ne: null } });
-    for (const ann of announcements) {
-      scheduleAnnouncement(client, ann);
+    try {
+      const announcements = await Announcement.find({ active: true, cronExpression: { $ne: null } });
+      for (const ann of announcements) {
+        scheduleAnnouncement(client, ann);
+      }
+      console.log(`[Announce] ${announcements.length} announcement(s) scheduled.`);
+    } catch (err) {
+      console.warn('[Announce] Could not load announcements (DB not ready yet):', err.message);
     }
-    console.log(`[Announce] ${announcements.length} announcement(s) scheduled.`);
   },
 };
