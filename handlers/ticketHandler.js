@@ -3,8 +3,9 @@ const Ticket = require('../models/Ticket');
 const GuildConfig = require('../models/GuildConfig');
 
 const getNextTicketNumber = async (guildId) => {
-  const last = await Ticket.findOne({ guildId }).sort({ ticketNumber: -1 });
-  return last ? last.ticketNumber + 1 : 1;
+  const last = await Ticket.findOne({ guildId, ticketNumber: { $exists: true, $type: 'number' } }).sort({ ticketNumber: -1 });
+  const lastNum = last?.ticketNumber;
+  return (lastNum && !isNaN(lastNum)) ? lastNum + 1 : 1;
 };
 
 const buildTranscript = async (channel) => {
@@ -25,8 +26,12 @@ const handleTicketOpen = async (interaction, buttonId) => {
   const buttonConfig = config.ticketPanel.buttons.find(b => b.id === buttonId);
   if (!buttonConfig) return interaction.editReply({ content: '❌ Bouton introuvable.' });
 
-  const existing = await Ticket.findOne({ userId: interaction.user.id, guildId: interaction.guildId, status: { $in: ['open', 'claimed'] } });
-  if (existing) return interaction.editReply({ content: `❌ Tu as déjà un ticket ouvert : <#${existing.channelId}>` });
+  const maxTickets = config.maxTicketsPerUser || 1;
+  const openTickets = await Ticket.find({ userId: interaction.user.id, guildId: interaction.guildId, status: { $in: ['open', 'claimed'] } });
+  if (openTickets.length >= maxTickets) {
+    const list = openTickets.map(t => `<#${t.channelId}>`).join(', ');
+    return interaction.editReply({ content: `❌ Tu as déjà **${openTickets.length}/${maxTickets}** ticket${maxTickets > 1 ? 's' : ''} ouvert${maxTickets > 1 ? 's' : ''} : ${list}` });
+  }
 
   const ticketNumber = await getNextTicketNumber(interaction.guildId);
   const channelName = `ticket-${String(ticketNumber).padStart(4, '0')}`;

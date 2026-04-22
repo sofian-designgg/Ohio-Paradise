@@ -67,17 +67,19 @@ const handleExchangePanelOpen = async (interaction) => {
   const config = await GuildConfig.findOne({ guildId: interaction.guildId });
   if (!config) return interaction.editReply({ content: '❌ Configuration introuvable.' });
 
-  const existing = await Ticket.findOne({
+  const msgs = config.exchangeMessages || {};
+  const maxTickets = config.maxTicketsPerUser || 1;
+  const openTickets = await Ticket.find({
     userId: interaction.user.id,
     guildId: interaction.guildId,
     category: 'exchange',
     status: { $in: ['open', 'claimed'] },
   });
 
-  const msgs = config.exchangeMessages || {};
-  if (existing) {
+  if (openTickets.length >= maxTickets) {
+    const list = openTickets.map(t => `<#${t.channelId}>`).join(', ');
     return interaction.editReply({
-      content: fmt(msgs.alreadyOpenMsg || '❌ Tu as déjà un ticket exchange ouvert : {channel}', { channel: `<#${existing.channelId}>` }),
+      content: fmt(msgs.alreadyOpenMsg || '❌ Tu as déjà un ticket exchange ouvert : {channel}', { channel: list }),
     });
   }
 

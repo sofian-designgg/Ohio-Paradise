@@ -100,6 +100,8 @@ const GuildConfigSchema = new Schema({
     invalidAmountMsg: { type: String, default: '❌ Montant invalide. Entrez un nombre valide.' },
   },
 
+  maxTicketsPerUser: { type: Number, default: 1 },
+
   embedTemplates: [
     {
       id: { type: String },
