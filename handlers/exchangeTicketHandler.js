@@ -1,7 +1,7 @@
 const {
   EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
   StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionFlagsBits, ChannelType,
+  PermissionFlagsBits, ChannelType, MessageFlags,
 } = require('discord.js');
 const Ticket = require('../models/Ticket');
 const GuildConfig = require('../models/GuildConfig');
@@ -56,13 +56,14 @@ const formatAmount = (num) => {
 };
 
 const getNextTicketNumber = async (guildId) => {
-  const last = await Ticket.findOne({ guildId }).sort({ ticketNumber: -1 });
-  return last ? last.ticketNumber + 1 : 1;
+  const last = await Ticket.findOne({ guildId, ticketNumber: { $exists: true, $type: 'number' } }).sort({ ticketNumber: -1 });
+  const lastNum = last?.ticketNumber;
+  return (lastNum && !isNaN(lastNum)) ? lastNum + 1 : 1;
 };
 
 const handleExchangePanelOpen = async (interaction) => {
   try {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const config = await GuildConfig.findOne({ guildId: interaction.guildId });
   if (!config) return interaction.editReply({ content: '❌ Configuration introuvable.' });
 
@@ -174,7 +175,7 @@ const handleSelectTo = async (interaction) => {
 
 const handleAmountSubmit = async (interaction, pair) => {
   try {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const [from, to] = pair.split('_');
   const rawAmount = interaction.fields.getTextInputValue('exc_amount').replace(',', '.');
   const amount = parseFloat(rawAmount);
