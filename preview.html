@@ -351,112 +351,87 @@
     <!-- EXCHANGE -->
     <div class="page" id="page-exchange">
       <h1>💱 Système d'Exchange</h1>
-      <p class="subtitle">Configure les paires, frais et limites d'échange</p>
+      <p class="subtitle">Configure les paires, frais, messages et l'apparence</p>
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title"><span>⚙️</span> Paramètres globaux</div>
-          <div class="form-group"><label>Frais globaux (%)</label><input id="exc-fee" type="number" value="5" min="0" max="50" step="0.1" /></div>
-          <div class="form-group"><label>Montant minimum</label><input id="exc-min" type="number" value="5" /></div>
-          <div class="form-group"><label>Montant maximum</label><input id="exc-max" type="number" value="5000" /></div>
-          <button class="btn btn-primary" onclick="saveExchange()">💾 Sauvegarder</button>
-        </div>
-        <div class="card">
-          <div class="card-title"><span>🔗</span> Paires actives</div>
-          <div id="pairs-list"></div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="toggleAllPairs()">Toggle tout</button>
-        </div>
+      <div class="tabs" id="exc-tabs">
+        <div class="tab active" onclick="showExcTab('parametres', this)">⚙️ Paramètres</div>
+        <div class="tab" onclick="showExcTab('panneau', this)">🖼️ Panneau</div>
+        <div class="tab" onclick="showExcTab('embed-ticket', this)">🎫 Embed Ticket</div>
+        <div class="tab" onclick="showExcTab('reponses', this)">💬 Réponses</div>
+        <div class="tab" onclick="showExcTab('commandes', this)">📋 Commandes</div>
       </div>
 
-      <div class="card">
-        <div class="card-title"><span>💱</span> Frais personnalisés par paire</div>
-        <div class="alert alert-info">Laisse vide pour utiliser le frais global. Remplis une valeur pour surcharger uniquement cette paire.</div>
-        <div id="custom-fees-list"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title"><span>📊</span> Simulateur de calcul</div>
-        <div class="flex-row" style="flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Montant</label><input id="sim-amount" type="number" value="100" oninput="simulate()" /></div>
-          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>De</label>
-            <select id="sim-from" oninput="simulate()">
-              <option>LTC</option><option>BTC</option><option>ETH</option><option>PAYPAL</option><option>CASHAPP</option>
-            </select>
-          </div>
-          <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Vers</label>
-            <select id="sim-to" oninput="simulate()">
-              <option>PAYPAL</option><option>LTC</option><option>BTC</option><option>ETH</option><option>CASHAPP</option>
-            </select>
-          </div>
-        </div>
-        <div id="sim-result" class="discord-mock" style="min-height:60px;"></div>
-      </div>
-
-      <div class="separator"></div>
-      <h2 style="margin-bottom:16px;">🎫 Panneau Exchange (Ticket)</h2>
-
-      <div class="grid-2">
-        <div>
+      <!-- TAB: PARAMETRES -->
+      <div id="exc-tab-parametres" class="exc-tab-content">
+        <div class="grid-2">
           <div class="card">
-            <div class="card-title"><span>🖼️</span> Embed du panneau</div>
-            <div class="form-group"><label>Titre</label><input id="exp-title" value="💱 Exchange — Ohio Paradise" oninput="updateExchangePanelPreview()" /></div>
-            <div class="form-group"><label>Description</label><textarea id="exp-desc" rows="3" oninput="updateExchangePanelPreview()">Sélectionne la crypto que tu envoies et celle que tu reçois pour ouvrir un ticket d'exchange.</textarea></div>
-            <div class="form-group"><label>Couleur</label><input id="exp-color" type="color" value="#F1C40F" oninput="updateExchangePanelPreview()" /></div>
-            <div class="form-group"><label>Footer</label><input id="exp-footer" value="Ohio Paradise Exchange" oninput="updateExchangePanelPreview()" /></div>
-            <div class="form-group"><label>Thumbnail URL</label><input id="exp-thumb" placeholder="https://..." oninput="updateExchangePanelPreview()" /></div>
-          </div>
-          <div class="card">
-            <div class="card-title"><span>💬</span> Messages du ticket (customisables)</div>
-            <div class="alert alert-info">Variables disponibles : <code>{user}</code> <code>{from}</code> <code>{to}</code> <code>{amount}</code> <code>{result}</code> <code>{fee}</code> <code>{channel}</code> <code>{date}</code> <code>{staff}</code> <code>{min}</code> <code>{max}</code></div>
-
-            <div class="form-group"><label>Message ticket ouvert (éphémère)</label><input id="exm-opened" value="✅ Ton ticket exchange a été créé : {channel}" /></div>
-            <div class="form-group"><label>Message déjà un ticket ouvert</label><input id="exm-already" value="❌ Tu as déjà un ticket exchange ouvert : {channel}" /></div>
-            <div class="form-group"><label>Titre de l'embed ticket</label><input id="exm-welcome-title" value="💱 Exchange — {from} → {to}" oninput="updateExchangeTicketPreview()" /></div>
-            <div class="form-group"><label>Description de l'embed ticket</label><textarea id="exm-welcome-desc" rows="4" oninput="updateExchangeTicketPreview()">Bonjour {user} ! 👋
-
-Tu souhaites échanger **{amount} {from}** contre **{result} {to}**.
-
-Un staff va confirmer et traiter ton échange sous peu.
-
-> 💡 Assure-toi d'avoir le montant prêt avant d'envoyer.</textarea></div>
-            <div class="form-group"><label>Footer de l'embed ticket</label><input id="exm-welcome-footer" value="Ohio Paradise Exchange • {date}" oninput="updateExchangeTicketPreview()" /></div>
-
-            <div class="separator"></div>
-            <div class="grid-2">
-              <div class="form-group"><label>Champ "Tu envoies"</label><input id="exm-yousend" value="📤 Tu envoies" oninput="updateExchangeTicketPreview()" /></div>
-              <div class="form-group"><label>Champ "Tu reçois"</label><input id="exm-youreceive" value="📥 Tu reçois" oninput="updateExchangeTicketPreview()" /></div>
-              <div class="form-group"><label>Champ "Taux"</label><input id="exm-rate" value="📈 Taux appliqué" oninput="updateExchangeTicketPreview()" /></div>
-              <div class="form-group"><label>Champ "Frais"</label><input id="exm-fee" value="💸 Frais ({fee}%)" oninput="updateExchangeTicketPreview()" /></div>
-              <div class="form-group"><label>Champ "Statut"</label><input id="exm-status" value="📊 Statut" oninput="updateExchangeTicketPreview()" /></div>
+            <div class="card-title"><span>⚙️</span> Paramètres globaux</div>
+            <div class="form-group"><label>Frais globaux (%)</label><input id="exc-fee" type="number" value="5" min="0" max="50" step="0.1" /></div>
+            <div class="form-group"><label>Montant minimum</label><input id="exc-min" type="number" value="5" /></div>
+            <div class="form-group"><label>Montant maximum</label><input id="exc-max" type="number" value="5000" /></div>
+            <div class="flex-row" style="gap:8px;margin-top:8px;">
+              <button class="btn btn-success" onclick="saveExchange()">💾 Sauvegarder</button>
+              <button class="btn btn-warning btn-sm" onclick="generateCmd('exchange')">📋 Générer commande</button>
             </div>
-
-            <div class="separator"></div>
-            <div class="grid-2">
-              <div class="form-group"><label>Statut — En attente</label><input id="exm-pending" value="⏳ En attente de confirmation staff" oninput="updateExchangeTicketPreview()" /></div>
-              <div class="form-group"><label>Statut — En cours</label><input id="exm-processing" value="🔄 En cours de traitement" /></div>
-              <div class="form-group"><label>Statut — Complété</label><input id="exm-completed" value="✅ Exchange complété !" /></div>
-              <div class="form-group"><label>Statut — Annulé</label><input id="exm-cancelled" value="❌ Exchange annulé" /></div>
-            </div>
-
-            <div class="separator"></div>
-            <div class="form-group"><label>Ping staff (dans le ticket)</label><input id="exm-staffping" value="📢 {staff} — Nouvel exchange à traiter !" /></div>
-            <div class="form-group"><label>Titre modal (demande de montant)</label><input id="exm-modal-title" value="💱 Montant à échanger" /></div>
-            <div class="form-group"><label>Label input montant</label><input id="exm-modal-label" value="Combien de {from} envoies-tu ?" /></div>
-            <div class="form-group"><label>Placeholder input montant</label><input id="exm-modal-placeholder" value="ex: 0.5" /></div>
-            <div class="form-group"><label>Select "Tu envoies" placeholder</label><input id="exm-select-from" value="📤 Que veux-tu envoyer ?" /></div>
-            <div class="form-group"><label>Select "Tu reçois" placeholder</label><input id="exm-select-to" value="📥 Que veux-tu recevoir ?" /></div>
-
-            <div class="separator"></div>
-            <div class="form-group"><label>Erreur — Montant invalide</label><input id="exm-invalid" value="❌ Montant invalide. Entrez un nombre valide." /></div>
-            <div class="form-group"><label>Erreur — En dessous du minimum</label><input id="exm-belowmin" value="❌ Montant minimum : {min} {from}" /></div>
-            <div class="form-group"><label>Erreur — Au dessus du maximum</label><input id="exm-abovemax" value="❌ Montant maximum : {max} {from}" /></div>
-            <div class="form-group"><label>Erreur — Paire désactivée</label><input id="exm-disabled" value="❌ Cette paire d'échange n'est pas disponible." /></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span>🔗</span> Paires actives</div>
+            <div id="pairs-list"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="toggleAllPairs()">Toggle tout</button>
           </div>
         </div>
+        <div class="card">
+          <div class="card-title"><span>💱</span> Frais personnalisés par paire</div>
+          <div class="alert alert-info">Laisse vide pour utiliser le frais global.</div>
+          <div id="custom-fees-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>📊</span> Simulateur</div>
+          <div class="flex-row" style="flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+            <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Montant</label><input id="sim-amount" type="number" value="100" oninput="simulate()" /></div>
+            <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>De</label>
+              <select id="sim-from" oninput="simulate()"><option>LTC</option><option>BTC</option><option>ETH</option><option>PAYPAL</option><option>EUR</option></select>
+            </div>
+            <div class="form-group" style="flex:1;min-width:120px;margin:0"><label>Vers</label>
+              <select id="sim-to" oninput="simulate()"><option>PAYPAL</option><option>LTC</option><option>BTC</option><option>ETH</option><option>EUR</option></select>
+            </div>
+          </div>
+          <div id="sim-result" class="discord-mock" style="min-height:60px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span>📋</span> Commandes slash rapides</div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config frais pourcentage:5</div><div class="cmd-desc">Définit les frais globaux à 5%</div></div><button class="copy-btn" onclick="copy('/exchange-config frais pourcentage:5',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config limites min:5 max:5000</div><div class="cmd-desc">Définit les limites de montant</div></div><button class="copy-btn" onclick="copy('/exchange-config limites min:5 max:5000',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config paire paire:LTC_PAYPAL action:Activer</div><div class="cmd-desc">Active ou désactive une paire</div></div><button class="copy-btn" onclick="copy('/exchange-config paire paire:LTC_PAYPAL action:Activer',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config voir</div><div class="cmd-desc">Affiche la config actuelle dans Discord</div></div><button class="copy-btn" onclick="copy('/exchange-config voir',this)">Copier</button></div>
+        </div>
+      </div>
 
-        <div>
+      <!-- TAB: PANNEAU -->
+      <div id="exc-tab-panneau" class="exc-tab-content" style="display:none">
+        <div class="grid-2">
+          <div>
+            <div class="card">
+              <div class="card-title"><span>🖼️</span> Embed du panneau</div>
+              <div class="form-group"><label>Titre</label><input id="exp-title" value="💱 Exchange — Ohio Paradise" oninput="updateExchangePanelPreview()" /></div>
+              <div class="form-group"><label>Description</label><textarea id="exp-desc" rows="3" oninput="updateExchangePanelPreview()">Sélectionne la crypto que tu envoies et celle que tu reçois pour ouvrir un ticket d'exchange.</textarea></div>
+              <div class="form-group"><label>Couleur</label><input id="exp-color" type="color" value="#F1C40F" oninput="updateExchangePanelPreview()" /></div>
+              <div class="form-group"><label>Footer</label><input id="exp-footer" value="Ohio Paradise Exchange" oninput="updateExchangePanelPreview()" /></div>
+              <div class="form-group"><label>Thumbnail URL</label><input id="exp-thumb" placeholder="https://..." oninput="updateExchangePanelPreview()" /></div>
+              <div class="flex-row" style="gap:8px;margin-top:8px;">
+                <button class="btn btn-success" onclick="saveExchangePanel()">💾 Sauvegarder</button>
+                <button class="btn btn-warning btn-sm" onclick="generateCmd('exchange_panel')">📋 Générer commande</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span>📋</span> Déployer le panneau</div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-panel channel:#exchange</div><div class="cmd-desc">Envoie le panneau dans le channel</div></div><button class="copy-btn" onclick="copy('/exchange-panel channel:#exchange',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config panneau-titre titre:💱 Exchange</div><div class="cmd-desc">Change le titre directement dans Discord</div></div><button class="copy-btn" onclick="copy('/exchange-config panneau-titre titre:💱 Exchange — Ohio Paradise',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config panneau-couleur couleur:#F1C40F</div><div class="cmd-desc">Change la couleur</div></div><button class="copy-btn" onclick="copy('/exchange-config panneau-couleur couleur:#F1C40F',this)">Copier</button></div>
+            </div>
+          </div>
           <div class="card">
-            <div class="card-title"><span>👁️</span> Prévisualisation panneau</div>
+            <div class="card-title"><span>👁️</span> Prévisualisation</div>
             <div class="discord-mock">
               <div class="discord-msg">
                 <div class="discord-avatar">🤖</div>
@@ -464,13 +439,51 @@ Un staff va confirmer et traiter ton échange sous peu.
                   <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
                   <div id="exp-preview-embed"></div>
                   <div class="discord-buttons">
-                    <button class="d-btn primary" style="background:#5865F2">💱 Ouvrir un Exchange</button>
+                    <button class="d-btn primary">💱 Ouvrir un Exchange</button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="card" style="margin-top:16px;">
+        </div>
+      </div>
+
+      <!-- TAB: EMBED TICKET -->
+      <div id="exc-tab-embed-ticket" class="exc-tab-content" style="display:none">
+        <div class="grid-2">
+          <div>
+            <div class="card">
+              <div class="card-title"><span>🎫</span> Embed du ticket</div>
+              <div class="alert alert-info">Variables : <code>{user}</code> <code>{from}</code> <code>{to}</code> <code>{amount}</code> <code>{result}</code> <code>{fee}</code> <code>{date}</code></div>
+              <div class="form-group"><label>Titre</label><input id="exm-welcome-title" value="💱 Exchange — {from} → {to}" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>Description</label><textarea id="exm-welcome-desc" rows="5" oninput="updateExchangeTicketPreview()">Bonjour {user} ! 👋
+
+Tu souhaites échanger **{amount} {from}** contre **{result} {to}**.
+
+Un staff va confirmer et traiter ton échange sous peu.
+
+> 💡 Assure-toi d'avoir le montant prêt avant d'envoyer.</textarea></div>
+              <div class="form-group"><label>Footer</label><input id="exm-welcome-footer" value="Ohio Paradise Exchange • {date}" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="separator"></div>
+              <div class="grid-2">
+                <div class="form-group"><label>Champ "Tu envoies"</label><input id="exm-yousend" value="📤 Tu envoies" oninput="updateExchangeTicketPreview()" /></div>
+                <div class="form-group"><label>Champ "Tu reçois"</label><input id="exm-youreceive" value="📥 Tu reçois" oninput="updateExchangeTicketPreview()" /></div>
+                <div class="form-group"><label>Champ "Taux"</label><input id="exm-rate" value="📈 Taux appliqué" oninput="updateExchangeTicketPreview()" /></div>
+                <div class="form-group"><label>Champ "Frais"</label><input id="exm-fee" value="💸 Frais ({fee}%)" oninput="updateExchangeTicketPreview()" /></div>
+                <div class="form-group"><label>Champ "Statut"</label><input id="exm-status" value="📊 Statut" oninput="updateExchangeTicketPreview()" /></div>
+              </div>
+              <div class="flex-row" style="gap:8px;margin-top:8px;">
+                <button class="btn btn-success" onclick="saveExchangePanel()">💾 Sauvegarder</button>
+                <button class="btn btn-warning btn-sm" onclick="generateCmd('exchange_panel')">📋 Générer commande</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span>📋</span> Commandes slash directes</div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config ticket-titre titre:💱 Exchange — {from} → {to}</div><div class="cmd-desc">Modifie le titre du ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config ticket-titre titre:💱 Exchange — {from} → {to}',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config ticket-footer footer:Ohio Paradise • {date}</div><div class="cmd-desc">Modifie le footer</div></div><button class="copy-btn" onclick="copy('/exchange-config ticket-footer footer:Ohio Paradise • {date}',this)">Copier</button></div>
+            </div>
+          </div>
+          <div class="card">
             <div class="card-title"><span>👁️</span> Prévisualisation ticket</div>
             <div class="discord-mock">
               <div class="discord-msg">
@@ -479,10 +492,10 @@ Un staff va confirmer et traiter ton échange sous peu.
                   <div class="discord-author">Ohio Paradise <span class="bot-tag">BOT</span></div>
                   <div id="exp-ticket-preview"></div>
                   <div class="discord-buttons">
-                    <button class="d-btn success" style="background:#2d7d46">✋ Claim</button>
-                    <button class="d-btn primary" style="background:#5865F2">✅ Complété</button>
-                    <button class="d-btn secondary" style="background:#4e5058">🚫 Annuler</button>
-                    <button class="d-btn danger" style="background:#c62828">🔒 Fermer</button>
+                    <button class="d-btn success">✋ Claim</button>
+                    <button class="d-btn primary">✅ Complété</button>
+                    <button class="d-btn secondary">🚫 Annuler</button>
+                    <button class="d-btn danger">🔒 Fermer</button>
                   </div>
                 </div>
               </div>
@@ -491,17 +504,78 @@ Un staff va confirmer et traiter ton échange sous peu.
         </div>
       </div>
 
-      <div class="flex-row" style="gap:12px;margin-bottom:20px;">
-        <button class="btn btn-success" onclick="saveExchangePanel()">💾 Sauvegarder</button>
-        <button class="btn btn-warning" onclick="generateCmd('exchange_panel')">📋 Générer la commande Discord</button>
-        <button class="btn btn-warning" onclick="generateCmd('exchange')">📋 Générer config exchange</button>
+      <!-- TAB: RÉPONSES -->
+      <div id="exc-tab-reponses" class="exc-tab-content" style="display:none">
+        <div class="grid-2">
+          <div>
+            <div class="card">
+              <div class="card-title"><span>📩</span> Messages d'ouverture</div>
+              <div class="alert alert-info">Variables : <code>{channel}</code> <code>{user}</code> <code>{staff}</code> <code>{min}</code> <code>{max}</code> <code>{from}</code></div>
+              <div class="form-group"><label>✅ Ticket créé (éphémère)</label><input id="exm-opened" value="✅ Ton ticket exchange a été créé : {channel}" /></div>
+              <div class="form-group"><label>❌ Déjà un ticket ouvert</label><input id="exm-already" value="❌ Tu as déjà un ticket exchange ouvert : {channel}" /></div>
+              <div class="form-group"><label>📢 Ping staff dans le ticket</label><input id="exm-staffping" value="📢 {staff} — Nouvel exchange à traiter !" /></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span>⏳</span> Statuts</div>
+              <div class="form-group"><label>En attente</label><input id="exm-pending" value="⏳ En attente de confirmation staff" oninput="updateExchangeTicketPreview()" /></div>
+              <div class="form-group"><label>En cours</label><input id="exm-processing" value="🔄 En cours de traitement" /></div>
+              <div class="form-group"><label>Complété</label><input id="exm-completed" value="✅ Exchange complété !" /></div>
+              <div class="form-group"><label>Annulé</label><input id="exm-cancelled" value="❌ Exchange annulé" /></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span>🔢</span> Modal saisie montant</div>
+              <div class="form-group"><label>Titre modal</label><input id="exm-modal-title" value="💱 Montant à échanger" /></div>
+              <div class="form-group"><label>Label champ montant</label><input id="exm-modal-label" value="Combien de {from} envoies-tu ?" /></div>
+              <div class="form-group"><label>Placeholder</label><input id="exm-modal-placeholder" value="ex: 50" /></div>
+              <div class="form-group"><label>Select "Tu envoies" placeholder</label><input id="exm-select-from" value="📤 Que veux-tu envoyer ?" /></div>
+              <div class="form-group"><label>Select "Tu reçois" placeholder</label><input id="exm-select-to" value="📥 Que veux-tu recevoir ?" /></div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span>❌</span> Messages d'erreur</div>
+              <div class="form-group"><label>Montant invalide</label><input id="exm-invalid" value="❌ Montant invalide. Entrez un nombre valide." /></div>
+              <div class="form-group"><label>En dessous du minimum</label><input id="exm-belowmin" value="❌ Montant minimum : {min} {from}" /></div>
+              <div class="form-group"><label>Au dessus du maximum</label><input id="exm-abovemax" value="❌ Montant maximum : {max} {from}" /></div>
+              <div class="form-group"><label>Paire désactivée</label><input id="exm-disabled" value="❌ Cette paire d'échange n'est pas disponible." /></div>
+            </div>
+            <div class="flex-row" style="gap:8px;">
+              <button class="btn btn-success" onclick="saveExchangePanel()">💾 Sauvegarder tout</button>
+              <button class="btn btn-warning btn-sm" onclick="generateCmd('exchange_panel')">📋 Générer commande</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title"><span>📋</span> Commandes slash directes</div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config message-ouverture message:✅ Ticket créé : {channel}</div><div class="cmd-desc">Message de confirmation création ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config message-ouverture message:✅ Ton ticket exchange a été créé : {channel}',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config message-deja-ouvert message:❌ Déjà ouvert : {channel}</div><div class="cmd-desc">Message si ticket déjà existant</div></div><button class="copy-btn" onclick="copy('/exchange-config message-deja-ouvert message:❌ Tu as déjà un ticket exchange ouvert : {channel}',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-attente texte:⏳ En attente...</div><div class="cmd-desc">Texte statut en attente</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-attente texte:⏳ En attente de confirmation staff',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-complete texte:✅ Exchange complété !</div><div class="cmd-desc">Texte statut complété</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-complete texte:✅ Exchange complété !',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-annule texte:❌ Exchange annulé</div><div class="cmd-desc">Texte statut annulé</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-annule texte:❌ Exchange annulé',this)">Copier</button></div>
+              <div class="cmd-ref"><div><div class="cmd-name">/exchange-config ticket-description description:Bonjour {user}...</div><div class="cmd-desc">Description de l'embed ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config ticket-description description:Bonjour {user} ! 👋\n\nTu souhaites échanger **{amount} {from}** contre **{result} {to}**.',this)">Copier</button></div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-title"><span>📋</span> Commandes correspondantes</div>
-        <div class="cmd-ref"><div><div class="cmd-name">/exchange-panel #channel</div><div class="cmd-desc">Déploie le panneau exchange interactif</div></div><button class="copy-btn" data-copy="/exchange-panel channel:#exchange">Copier</button></div>
-        <div class="cmd-ref"><div><div class="cmd-name">/exchange-calc [from] [to] [montant]</div><div class="cmd-desc">Calcule un échange avec frais et taux en temps réel</div></div><button class="copy-btn" data-copy="/exchange-calc from:LTC to:PAYPAL amount:50">Copier</button></div>
-        <div class="cmd-ref"><div><div class="cmd-name">/exchange-rates</div><div class="cmd-desc">Affiche tous les taux actuels</div></div><button class="copy-btn" data-copy="/exchange-rates">Copier</button></div>
+      <!-- TAB: COMMANDES -->
+      <div id="exc-tab-commandes" class="exc-tab-content" style="display:none">
+        <div class="card">
+          <div class="card-title"><span>📋</span> Toutes les commandes Exchange</div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-panel channel:#exchange</div><div class="cmd-desc">Déploie le panneau exchange interactif dans un channel</div></div><button class="copy-btn" onclick="copy('/exchange-panel channel:#exchange',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-calc from:LTC to:PAYPAL amount:50</div><div class="cmd-desc">Calcule un échange avec taux et frais en temps réel</div></div><button class="copy-btn" onclick="copy('/exchange-calc from:LTC to:PAYPAL amount:50',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-rates</div><div class="cmd-desc">Affiche tous les taux des paires actives</div></div><button class="copy-btn" onclick="copy('/exchange-rates',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config voir</div><div class="cmd-desc">Voir toute la config exchange actuelle</div></div><button class="copy-btn" onclick="copy('/exchange-config voir',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config frais pourcentage:5</div><div class="cmd-desc">Définir les frais globaux</div></div><button class="copy-btn" onclick="copy('/exchange-config frais pourcentage:5',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config limites min:5 max:5000</div><div class="cmd-desc">Définir les limites de montant</div></div><button class="copy-btn" onclick="copy('/exchange-config limites min:5 max:5000',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config paire paire:LTC_PAYPAL action:Activer</div><div class="cmd-desc">Activer/désactiver une paire</div></div><button class="copy-btn" onclick="copy('/exchange-config paire paire:LTC_PAYPAL action:Activer',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config panneau-titre titre:...</div><div class="cmd-desc">Modifier le titre du panneau</div></div><button class="copy-btn" onclick="copy('/exchange-config panneau-titre titre:💱 Exchange — Ohio Paradise',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config panneau-couleur couleur:#F1C40F</div><div class="cmd-desc">Modifier la couleur du panneau</div></div><button class="copy-btn" onclick="copy('/exchange-config panneau-couleur couleur:#F1C40F',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config ticket-titre titre:...</div><div class="cmd-desc">Modifier le titre du ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config ticket-titre titre:💱 Exchange — {from} → {to}',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config ticket-description description:...</div><div class="cmd-desc">Modifier la description du ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config ticket-description description:Bonjour {user} ! Ton échange {from}→{to}',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config message-ouverture message:...</div><div class="cmd-desc">Message éphémère à l'ouverture du ticket</div></div><button class="copy-btn" onclick="copy('/exchange-config message-ouverture message:✅ Ton ticket exchange a été créé : {channel}',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-attente texte:...</div><div class="cmd-desc">Texte statut en attente</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-attente texte:⏳ En attente de confirmation staff',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-complete texte:...</div><div class="cmd-desc">Texte statut complété</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-complete texte:✅ Exchange complété !',this)">Copier</button></div>
+          <div class="cmd-ref"><div><div class="cmd-name">/exchange-config statut-annule texte:...</div><div class="cmd-desc">Texte statut annulé</div></div><button class="copy-btn" onclick="copy('/exchange-config statut-annule texte:❌ Exchange annulé',this)">Copier</button></div>
+        </div>
       </div>
     </div>
 
@@ -826,6 +900,16 @@ const ALL_PAIRS = [
   'LTC_BTC','ETH_LTC','BTC_LTC',
   'LTC_CASHAPP','BTC_CASHAPP',
 ];
+
+// ============ EXCHANGE SUB-TABS ============
+function showExcTab(name, el) {
+  document.querySelectorAll('.exc-tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('#exc-tabs .tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('exc-tab-' + name).style.display = 'block';
+  el.classList.add('active');
+  if (name === 'panneau') { updateExchangePanelPreview(); }
+  if (name === 'embed-ticket') { updateExchangeTicketPreview(); }
+}
 
 // ============ NAV ============
 function showPage(name) {
